@@ -1,0 +1,80 @@
+================================================================================
+PROMPT – BUILD Revyn (COMPLETE PROJECT)
+================================================================================
+
+You are an expert full-stack engineer. Build a complete, production-quality 
+Next.js application called **Revyn** for the Razorpay AI Buildathon 2026 
+(Track 03 – AI Revenue Recovery).
+
+### Core Requirements
+
+Build a bounded AI payment recovery agent with the following flow:
+
+1. Detect failed / at-risk payments (support both synthetic batch and Razorpay Test Mode webhooks)
+2. Diagnose root cause (rule-based engine first + Groq LLM only for ambiguous cases)
+3. Decide action using a **strict deterministic Policy Engine** (LLM must never decide or execute money actions)
+4. Execute only allowed actions via Razorpay Test Mode (create Payment Link / Order)
+5. Log every decision in an immutable audit trail
+6. Show clear measured metrics: Total at risk, Recovered amount, Recovery rate, Exceptions
+
+### Tech Stack (Mandatory)
+
+- Next.js 15 (App Router) + TypeScript
+- Tailwind CSS + shadcn/ui
+- Supabase (PostgreSQL for cases, audit logs, and optional auth)
+- Official Razorpay Node.js SDK (Test Mode only – keys must start with rzp_test_)
+- Groq AI (use model: openai/gpt-oss-20b or openai/gpt-oss-120b)
+- Forced structured JSON output from Groq for diagnosis
+
+### Safety Rules (Must be enforced in code)
+
+- LLM can only return diagnosis (root_cause, confidence, explanation)
+- All final decisions come from a pure TypeScript Policy Engine
+- Hard limits: max 3 retries, stop on revoked/expired mandate, economic floor
+- Global Kill Switch that immediately halts all recovery actions
+- Full audit log for every step (who/what/why/when)
+
+### UI Requirements
+
+Use a professional dark fintech theme:
+
+- Background: #0B0F19
+- Cards: #111827
+- Primary accent: #3B82F6
+- Success: #10B981 | Warning: #F59E0B | Danger: #EF4444
+- Clean sidebar + top bar layout
+- Dashboard with big metric cards
+- Recoveries table + detail view
+- Searchable Audit Trail page
+- Settings page with Kill Switch
+
+Make the UI polished, modern, and trustworthy. Use shadcn/ui components, 
+proper loading states, empty states, and status badges.
+
+### Deliverables
+
+1. Complete working Next.js project
+2. Supabase schema (SQL) for cases and audit_logs
+3. Policy Engine implementation
+4. Groq diagnosis function with strict JSON schema
+5. Razorpay Test Mode integration (Payment Links + webhook verification)
+6. Beautiful dashboard that shows real metrics after running a batch
+7. Clear README with setup instructions (env variables, how to run, how to demo)
+
+### Important Notes
+
+- Everything must work in Razorpay Test Mode (no real money)
+- Prefer server actions / API routes for all sensitive operations
+- Make the code clean, well-structured, and easy to understand for judges
+- Include at least one graceful failure example in the demo flow
+
+Start by scaffolding the Next.js app with the correct folder structure, 
+then implement the core modules one by one. Prioritize a working end-to-end 
+flow that can process a batch and show recovered amount + audit trail.
+
+Build it as if this project will be reviewed by Razorpay engineers for an 
+internship offer.
+
+================================================================================
+END OF PROMPT
+================================================================================

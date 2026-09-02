@@ -1,0 +1,138 @@
+================================================================================
+PROJECT TITLE: Revyn – Bounded Payment Recovery Agent
+Track: 03 – AI Revenue Recovery (Razorpay AI Buildathon 2026)
+================================================================================
+
+1. THE PROBLEM
+--------------
+
+Every day, Indian merchants using Razorpay lose a significant percentage of 
+their revenue to failed or abandoned payments. The failure can happen for many 
+reasons:
+
+- Insufficient balance in the customer’s account
+- Temporary bank / UPI downtime
+- Network timeout between Razorpay and the bank
+- Expired or revoked UPI Autopay / e-Mandate
+- Customer abandons the checkout page
+- Card expired or incorrect CVV
+- Subscription charge fails on the due date
+
+Most merchants currently handle these failures in a very crude way:
+- Send a generic “Payment failed – please try again” email or SMS
+- Retry the same payment blindly (which often fails again and annoys the customer)
+- Or simply write the revenue off
+
+This approach has three serious problems:
+1. Low recovery rate (typically 15–25%)
+2. No understanding of *why* the payment failed
+3. No safety controls – an automated system can easily spam customers, 
+   retry revoked mandates, or create infinite loops
+
+As a result, money that could have been recovered simply disappears.
+
+2. WHY THIS MATTERS RIGHT NOW
+-----------------------------
+
+- Digital payments in India are growing extremely fast.
+- UPI Autopay and subscriptions are becoming common.
+- Customers expect frictionless experiences.
+- Merchants (especially SMEs) do not have large collections teams.
+- AI can now diagnose the root cause and choose the right action, 
+  but only if it is strictly bounded and auditable.
+
+Razorpay’s own Track 3 brief captures this perfectly:
+“Don’t just identify the problem. Show measured money recovered across a batch, 
+with compliant escalation, stopping rules, and an audit trail.”
+
+3. THE SOLUTION – Revyn
+---------------------------
+
+Revyn is a bounded, explainable AI agent that closes the loop from 
+detection → diagnosis → decision → safe action → measurement.
+
+Core Workflow
+-------------
+
+Step 1: Detect
+- Ingest a batch of failed / at-risk payments (synthetic data + real Razorpay 
+  Test Mode webhooks or payment objects).
+
+Step 2: Diagnose (Root Cause)
+- Rule-based engine first (fast & deterministic).
+- LLM used only as a secondary classifier for ambiguous error messages.
+- Output is a clean, typed root-cause label + confidence score.
+  Examples: insufficient_balance, bank_timeout, mandate_expired, 
+  network_error, customer_abandoned, card_expired, etc.
+
+Step 3: Decide (Policy Engine – the most important part)
+- A hard-coded, deterministic Policy Engine decides the action.
+- The LLM is never allowed to execute money-moving actions directly.
+- Policy rules include:
+  • Maximum retry attempts (e.g. 3)
+  • Economic floor (don’t recover very small amounts)
+  • Time windows (e.g. retry insufficient_balance during salary days 1–5)
+  • Hard stops for revoked / expired mandates
+  • Escalation to human after certain failures
+  • Kill-switch / global halt mode
+
+Step 4: Execute (Bounded Actions only)
+Allowed actions (strict allow-list):
+- Create a new Razorpay Test Mode Payment Link / Order
+- Schedule a smart retry
+- Generate a personalized Hinglish WhatsApp / SMS recovery message
+- Escalate to human review queue
+- Mark as unrecoverable and stop
+
+Step 5: Measure & Audit
+- Every decision is written to an immutable audit log (timestamp, reason, 
+  policy rule triggered, action taken).
+- At the end of the batch the system reports:
+  • Total revenue at risk
+  • Revenue recovered (verified via Razorpay Test Mode)
+  • Recovery rate vs a naïve baseline
+  • Number of cases escalated / stopped
+  • Full exception list
+
+4. KEY DESIGN PRINCIPLES (Why this solution is strong)
+-------------------------------------------------------
+
+1. Safety First
+   - LLM only diagnoses. All execution authority sits with a deterministic 
+     Policy Engine.
+   - Hard gates prevent dangerous behaviour (retrying revoked mandates, 
+     infinite retries, etc.).
+
+2. Measurable Impact
+   - Judges can see exact rupees recovered on a held-out batch.
+   - Comparison against a simple baseline (retry-everything-once) shows 
+     real lift.
+
+3. Full Audit Trail
+   - Every action is explainable and logged.
+   - Perfect for compliance and for the “show the audit trail” requirement.
+
+4. Graceful Failure Handling
+   - At least one realistic failure case is demonstrated 
+     (e.g. Razorpay API down, webhook signature invalid, policy rejection).
+
+5. Realistic Integration
+   - Uses real Razorpay Test Mode APIs (keys starting with rzp_test_).
+   - No real money is ever moved.
+
+5. EXPECTED OUTCOME
+-------------------
+
+On a typical synthetic batch of 100–200 failed payments:
+- Naïve retry baseline recovers ~20–25%
+- Revyn recovers 35–45% (or higher) with far fewer customer annoyances
+- 100% of decisions are logged and explainable
+- Zero policy violations
+
+This combination of real recovery numbers + strict safety + clear audit trail 
+is exactly what the Track 3 bar asks for, and is strong enough to stand out 
+in the shortlisting process for the AI Builder Internship.
+
+================================================================================
+END OF DOCUMENT
+================================================================================

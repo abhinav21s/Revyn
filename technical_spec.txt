@@ -1,0 +1,139 @@
+================================================================================
+Revyn – TECHNICAL SPECIFICATION
+Razorpay AI Buildathon 2026 | Track 03 – AI Revenue Recovery
+================================================================================
+
+1. PROJECT OVERVIEW
+-------------------
+Revyn is a bounded AI agent that detects failed / at-risk payments, 
+diagnoses the root cause, decides a safe recovery action using a deterministic 
+policy engine, executes the action via Razorpay Test Mode, and provides a full 
+audit trail with measured recovery metrics.
+
+2. TECH STACK
+-------------
+Frontend & Backend     : Next.js 15 (App Router) + TypeScript
+Styling                : Tailwind CSS + shadcn/ui
+Database & Auth        : Supabase (PostgreSQL + Auth + Realtime)
+Payments               : Razorpay Node.js SDK (Test Mode only)
+AI Provider            : Groq (model: openai/gpt-oss-20b or openai/gpt-oss-120b)
+State / Audit Log      : Supabase tables + optional hash-chained audit entries
+Deployment             : Vercel (recommended)
+
+3. CORE MODULES
+---------------
+• Detection Layer        – Ingest failed payments (synthetic batch + Razorpay webhooks)
+• Diagnosis Engine       – Rule-based first + Groq LLM for ambiguous cases (forced JSON)
+• Policy Engine          – Fully deterministic, hard-coded rules (no LLM decides actions)
+• Execution Layer        – Creates Razorpay Payment Links / Orders in Test Mode
+• Audit & Ledger         – Immutable log of every decision + outcome
+• Dashboard              – Metrics, recovery rate, exception list, audit trail viewer
+
+4. KEY SAFETY RULES (MUST BE ENFORCED)
+--------------------------------------
+- LLM can only diagnose. It can never execute money actions.
+- Maximum retry attempts: 3
+- Hard stop on revoked / expired mandates
+- Economic floor (ignore very small amounts)
+- Kill-switch / global halt mode
+- Every action must be logged with reason + policy rule triggered
+
+5. UI DESIGN SYSTEM
+-------------------
+
+Color Palette (Professional Fintech Dark Theme)
+-----------------------------------------------
+Background (main)      : #0B0F19
+Surface / Cards        : #111827
+Elevated Surface       : #1F2937
+Border                 : #374151
+Primary (Accent)       : #3B82F6          (Blue)
+Primary Hover          : #2563EB
+Success                : #10B981          (Emerald)
+Warning                : #F59E0B          (Amber)
+Danger                 : #EF4444          (Red)
+Text Primary           : #F9FAFB
+Text Secondary         : #9CA3AF
+Muted                  : #6B7280
+
+Typography
+----------
+Font Family            : Inter (or Geist Sans)
+Headings               : font-semibold / font-bold
+Body                   : font-normal
+Monospace (for IDs)    : JetBrains Mono or Geist Mono
+
+Layout Structure
+----------------
+• Sidebar (left, fixed, 260px) 
+  - Logo + Project name
+  - Navigation: Dashboard | Recoveries | Audit Trail | Settings | Kill Switch
+
+• Top Bar
+  - Page title
+  - Environment badge (TEST MODE)
+  - User avatar / logout
+
+• Main Content Area
+  - Clean cards with subtle borders
+  - Generous padding (p-6 / p-8)
+  - Consistent 8px spacing system
+
+Key Screens
+-----------
+1. Dashboard
+   - Big metric cards: Total At Risk | Recovered | Recovery Rate | Pending
+   - Recent recoveries table
+   - Quick “Run Batch” button
+
+2. Recovery Workspace
+   - List of cases with status badges
+   - Detail drawer / side panel showing diagnosis + policy decision + audit
+
+3. Audit Trail
+   - Searchable, filterable log
+   - Expandable rows showing full decision chain
+
+4. Settings
+   - Policy rules (read-only view for demo)
+   - Kill switch toggle
+   - Groq / Razorpay connection status
+
+Design Principles
+-----------------
+- Dark, calm, professional fintech look
+- High contrast for readability
+- Clear status colors (green = recovered, amber = pending, red = failed/stopped)
+- Subtle shadows and rounded corners (rounded-xl)
+- Loading states and empty states must look polished
+- Mobile responsive (sidebar collapses on small screens)
+
+6. FILE / FOLDER STRUCTURE (RECOMMENDED)
+----------------------------------------
+app/
+  (dashboard)/
+    page.tsx
+    recoveries/
+    audit/
+    settings/
+  api/
+    recover/
+    diagnose/
+    webhook/razorpay/
+    audit/
+lib/
+  razorpay.ts
+  groq.ts
+  policy-engine.ts
+  diagnosis.ts
+  supabase.ts
+components/
+  ui/                  (shadcn)
+  metrics-cards.tsx
+  recovery-table.tsx
+  audit-log.tsx
+  kill-switch.tsx
+
+================================================================================
+END OF TECHNICAL SPECIFICATION
+================================================================================
