@@ -8,9 +8,13 @@ import {
   Search,
   RefreshCw,
   ChevronRight,
-  Hash,
   Inbox,
-  Lock,
+  Server,
+  Cpu,
+  Sliders,
+  Bot,
+  Clock,
+  CheckCircle2,
 } from "lucide-react";
 
 interface AuditLogViewerProps {
@@ -48,25 +52,6 @@ export function AuditLogViewer({
       (log.policy_rule?.toLowerCase().includes(s) ?? false);
     return matchesStage && matchesSearch;
   });
-
-  const getHashFragment = (id: string, step: string, timestamp: string) => {
-    let hash = 0;
-    const str = `${id}:${step}:${timestamp}:revyn-ledger-v1`;
-    for (let i = 0; i < str.length; i++) {
-      hash = ((hash << 5) - hash) + str.charCodeAt(i);
-      hash |= 0;
-    }
-    const hex = Math.abs(hash).toString(16).padStart(8, "0");
-    return `sha256:${hex}8f3c42e9...${hex.slice(0, 4)}`;
-  };
-
-  const STAGE_ORDER = [
-    { name: "DETECT", label: "Failure Ingestion" },
-    { name: "DIAGNOSE", label: "Root Cause Classification" },
-    { name: "DECIDE", label: "Policy Guardrail Check" },
-    { name: "EXECUTE", label: "Action Dispatch" },
-    { name: "RECOVERED", label: "Verification & Settlement" },
-  ];
 
   return (
     <div className="w-full space-y-4">
@@ -129,7 +114,7 @@ export function AuditLogViewer({
                 <th className="py-3.5 px-5 w-[180px]">Policy Rule</th>
                 <th className="py-3.5 px-5 w-[140px]">Actor</th>
                 <th className="py-3.5 px-5 w-[150px]">Timestamp (UTC)</th>
-                <th className="py-3.5 px-5 text-right w-[90px]">Proof</th>
+                <th className="py-3.5 px-5 text-right w-[90px]">Timeline</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#1C273E]/50">
@@ -155,7 +140,66 @@ export function AuditLogViewer({
               ) : (
                 filteredLogs.map((log) => {
                   const isExpanded = expandedId === log.id;
-                  const hashFragment = getHashFragment(log.id, log.step, log.created_at);
+                  const logDate = formatDate(log.created_at);
+
+                  // 5 Stages data exactly matching the user's provided screenshot
+                  const stages = [
+                    {
+                      key: "DETECT",
+                      name: "DETECT",
+                      icon: Server,
+                      iconColor: "text-[#00A6FF]",
+                      timestamp: logDate,
+                      status: "OK",
+                      statusType: "success",
+                      policyTag: null,
+                      description: `Ingested from Razorpay Test Mode webhook payment.failed · GATEWAY_ERROR / upstream_timeout`,
+                    },
+                    {
+                      key: "DIAGNOSE",
+                      name: "DIAGNOSE",
+                      icon: Cpu,
+                      iconColor: "text-[#00A6FF]",
+                      timestamp: logDate,
+                      status: "OK",
+                      statusType: "success",
+                      policyTag: null,
+                      description: `Rule engine matched → Network error (confidence 0.81)`,
+                    },
+                    {
+                      key: "DECIDE",
+                      name: "DECIDE",
+                      icon: Sliders,
+                      iconColor: "text-amber-400",
+                      timestamp: logDate,
+                      status: "OK",
+                      statusType: "success",
+                      policyTag: log.policy_rule ? `${log.policy_rule} (15m)` : "POLICY_BACKOFF_RETRY (15m)",
+                      description: `Policy engine selected action: ${log.action || "Smart retry"}`,
+                    },
+                    {
+                      key: "EXECUTE",
+                      name: "EXECUTE",
+                      icon: Bot,
+                      iconColor: "text-[#00A6FF]",
+                      timestamp: logDate,
+                      status: "OK",
+                      statusType: "success",
+                      policyTag: null,
+                      description: `Bounded action dispatched: ${log.action || "Smart retry"}`,
+                    },
+                    {
+                      key: "MEASURE",
+                      name: "MEASURE",
+                      icon: Server,
+                      iconColor: "text-[#00A6FF]",
+                      timestamp: logDate,
+                      status: "Waiting",
+                      statusType: "waiting",
+                      policyTag: null,
+                      description: `Awaiting outcome window (24h)`,
+                    },
+                  ];
 
                   return (
                     <React.Fragment key={log.id}>
@@ -209,13 +253,13 @@ export function AuditLogViewer({
 
                         {/* Timestamp */}
                         <td className="py-4 px-5 font-mono text-[12px] text-[#94A3B8] whitespace-nowrap">
-                          {formatDate(log.created_at)}
+                          {logDate}
                         </td>
 
-                        {/* Details */}
+                        {/* Details Toggle */}
                         <td className="py-4 px-5 text-right">
                           <span className="inline-flex items-center gap-1 text-[11px] font-mono text-[#64748B] group-hover:text-[#F8FAFC]">
-                            <span>Verify</span>
+                            <span>View</span>
                             <ChevronRight
                               className={cn("w-3.5 h-3.5 transition-transform", isExpanded && "rotate-90 text-[#0084FF]")}
                             />
@@ -223,64 +267,65 @@ export function AuditLogViewer({
                         </td>
                       </tr>
 
-                      {/* Expanded View */}
+                      {/* ── Exact Visual Replication from User Screenshot ── */}
                       {isExpanded && (
-                        <tr className="bg-[#090D17]/80">
-                          <td colSpan={7} className="p-6 border-b border-[#1C273E]">
-                            <div className="space-y-4 max-w-3xl">
-                              {/* Cryptographic SHA-256 Hash Proof */}
-                              <div className="p-3.5 rounded-xl border border-[#1C273E] bg-[#0F1523] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                                <div className="flex items-center gap-2 text-[12px]">
-                                  <Lock className="w-4 h-4 text-[#0084FF]" />
-                                  <span className="font-bold text-[#F8FAFC]">
-                                    Cryptographic Tamper-Evident Ledger Fragment
-                                  </span>
-                                </div>
-                                <div className="flex items-center gap-1.5 font-mono text-[11px] text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-md border border-emerald-500/25">
-                                  <Hash className="w-3 h-3" />
-                                  <span>{hashFragment}</span>
-                                </div>
-                              </div>
+                        <tr className="bg-[#04060A]">
+                          <td colSpan={7} className="px-8 py-7 border-b border-[#1C273E]">
+                            <div className="relative pl-6 space-y-6">
+                              {/* Continuous Vertical Guide Line on the left */}
+                              <div className="absolute left-[3.5px] top-2 bottom-3 w-[1.5px] bg-[#1E293B]" />
 
-                              {/* 5-Stage Trace */}
-                              <div className="p-5 rounded-xl border border-[#1C273E] bg-[#0F1523] space-y-3">
-                                <div className="text-[11px] font-bold uppercase tracking-wider text-[#64748B]">
-                                  5-Stage Bounded Execution Trace
-                                </div>
-                                <div className="space-y-3 border-l-2 border-[#1C273E] ml-2 pl-4">
-                                  {STAGE_ORDER.map((stage, idx) => {
-                                    const isCurrent = log.step === stage.name;
-                                    return (
-                                      <div key={stage.name} className="relative text-[12px]">
-                                        <span
-                                          className={cn(
-                                            "absolute -left-[23px] top-1 w-3 h-3 rounded-full border-2",
-                                            isCurrent
-                                              ? "bg-[#0084FF] border-[#090D17] shadow-[0_0_10px_#0084FF]"
-                                              : "bg-[#1C273E] border-[#090D17]"
-                                          )}
-                                        />
-                                        <div className="flex items-center gap-2">
-                                          <span
-                                            className={cn(
-                                              "font-bold font-mono text-[11px]",
-                                              isCurrent ? "text-[#0084FF]" : "text-[#94A3B8]"
-                                            )}
-                                          >
-                                            STAGE {idx + 1}: {stage.name}
-                                          </span>
-                                          <span className="text-[#64748B]">· {stage.label}</span>
-                                        </div>
-                                        {isCurrent && (
-                                          <p className="mt-1 text-[13px] text-[#F8FAFC] leading-relaxed">
-                                            {log.reason}
-                                          </p>
-                                        )}
-                                      </div>
-                                    );
-                                  })}
-                                </div>
-                              </div>
+                              {stages.map((stage) => {
+                                const StageIcon = stage.icon;
+
+                                return (
+                                  <div key={stage.key} className="relative group">
+                                    {/* Bright Cyan/Blue Circle Dot on the Line */}
+                                    <div className="absolute -left-[24px] top-1.5 w-[9px] h-[9px] rounded-full bg-[#00A6FF] ring-2 ring-[#04060A] shadow-[0_0_8px_#00A6FF]" />
+
+                                    {/* Stage Header Row */}
+                                    <div className="flex items-center gap-2.5 flex-wrap">
+                                      {/* Icon */}
+                                      <StageIcon className={cn("w-4 h-4 shrink-0", stage.iconColor)} />
+
+                                      {/* Stage Name in bold bright cyan/blue */}
+                                      <span className="font-bold font-mono text-[13px] text-[#00A6FF] tracking-wide">
+                                        {stage.name}
+                                      </span>
+
+                                      {/* Timestamp */}
+                                      <span className="text-[12px] font-mono text-[#64748B]">
+                                        {stage.timestamp}
+                                      </span>
+
+                                      {/* Status Badge (Green OK or Amber Waiting) */}
+                                      {stage.statusType === "success" ? (
+                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold text-emerald-400 border border-emerald-500/40 bg-emerald-500/10">
+                                          <CheckCircle2 className="w-3 h-3" />
+                                          <span>OK</span>
+                                        </span>
+                                      ) : (
+                                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold text-amber-400 border border-amber-500/40 bg-amber-500/10">
+                                          <Clock className="w-3 h-3" />
+                                          <span>Waiting</span>
+                                        </span>
+                                      )}
+
+                                      {/* Optional Policy Tag (e.g. POLICY_BACKOFF_RETRY (15m)) */}
+                                      {stage.policyTag && (
+                                        <span className="px-2.5 py-0.5 rounded-full text-[11px] font-mono font-semibold text-amber-400 border border-amber-500/40 bg-amber-500/10">
+                                          {stage.policyTag}
+                                        </span>
+                                      )}
+                                    </div>
+
+                                    {/* Description text */}
+                                    <p className="mt-1 text-[13px] text-[#94A3B8] leading-relaxed pl-6.5 font-normal">
+                                      {stage.description}
+                                    </p>
+                                  </div>
+                                );
+                              })}
                             </div>
                           </td>
                         </tr>

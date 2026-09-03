@@ -58,11 +58,11 @@ export function Sidebar({ onClose }: SidebarProps) {
       {/* ── Logo Block ── */}
       <div className="p-6 border-b border-[#1C273E]">
         <Link href="/" className="flex items-center gap-3 group" onClick={onClose}>
-          <div className="w-9 h-9 rounded-lg bg-[#0084FF]/15 border border-[#0084FF]/40 flex items-center justify-center shrink-0 shadow-sm shadow-[#0084FF]/20">
-            <span className="text-[18px] font-black text-[#0084FF] leading-none select-none tracking-tight">
-              R
-            </span>
-          </div>
+          <img
+            src="/icon.svg"
+            alt="Revyn Logo"
+            className="w-9 h-9 rounded-lg shrink-0 shadow-sm shadow-[#0084FF]/25 border border-[#1C273E]"
+          />
           <div>
             <div className="text-[16px] font-bold tracking-tight text-[#F8FAFC] leading-none">
               Revyn<span className="text-[#0084FF]">AI</span>

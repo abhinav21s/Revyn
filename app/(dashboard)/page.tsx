@@ -53,37 +53,45 @@ export default function DashboardPage() {
       {/* ── 2. Analytical Panels: Recovery Rate vs Naïve Retry + Root Cause Distribution ── */}
       <DashboardCharts cases={cases} metrics={metrics} />
 
-      {/* ── 3. Recent recoveries panel & table ── */}
-      <Panel
-        title="Recent recoveries"
-        description="Live telemetry of payment failure recoveries"
-        action={
-          <Link
-            href="/recoveries"
-            className="text-[12px] font-medium flex items-center gap-1 hover:underline transition-all"
-            style={{ color: "var(--primary)" }}
+      {/* ── 3. Recent recoveries split layout: Left Table + Right Details ── */}
+      <div className="flex flex-col xl:flex-row items-start gap-6">
+        <div className="flex-1 min-w-0 w-full">
+          <Panel
+            title="Recent recoveries"
+            description="Live telemetry of payment failure recoveries"
+            action={
+              <Link
+                href="/recoveries"
+                className="text-[12px] font-semibold text-[#0084FF] hover:underline flex items-center gap-1 transition-all"
+              >
+                <span>Open workspace</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            }
           >
-            <span>Open workspace</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </Link>
-        }
-      >
-        <RecoveryTable
-          cases={cases}
-          loading={loading}
-          onSelectCase={setSelectedCase}
-          onRefresh={loadData}
-          onRunBatch={loadData}
-          compact={true}
-        />
-      </Panel>
+            <RecoveryTable
+              cases={cases}
+              loading={loading}
+              onSelectCase={setSelectedCase}
+              onRefresh={loadData}
+              onRunBatch={loadData}
+              compact={true}
+            />
+          </Panel>
+        </div>
 
-      {/* ── 4. Case Detail Drawer ── */}
-      <CaseDetail
-        paymentCase={selectedCase}
-        onClose={() => setSelectedCase(null)}
-        onCaseUpdated={loadData}
-      />
+        {/* Right Side: Detailed info on transaction click */}
+        {selectedCase && (
+          <div className="w-full xl:w-[480px] shrink-0 xl:sticky xl:top-24">
+            <CaseDetail
+              paymentCase={selectedCase}
+              onClose={() => setSelectedCase(null)}
+              onCaseUpdated={loadData}
+              inline={true}
+            />
+          </div>
+        )}
+      </div>
     </div>
   );
 }

@@ -6,17 +6,14 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { ShieldAlert } from "lucide-react";
 
-// Brand Logo Mark: 28x28px rounded square with "R" letter mark in --accent-primary (#4F7CFF)
+// Brand Logo Mark: favicon image
 function BrandMark() {
   return (
-    <div className="w-[28px] h-[28px] rounded-[8px] bg-[rgba(79,124,255,0.12)] border border-[rgba(79,124,255,0.35)] flex items-center justify-center shrink-0">
-      <span
-        className="text-[16px] font-bold text-[#4F7CFF] leading-none select-none"
-        style={{ fontFamily: "'Inter', system-ui, sans-serif", letterSpacing: "-0.04em" }}
-      >
-        R
-      </span>
-    </div>
+    <img
+      src="/icon.svg"
+      alt="Revyn Logo"
+      className="w-[28px] h-[28px] rounded-[8px] shrink-0 border border-[#1C273E] shadow-sm shadow-[#0084FF]/25"
+    />
   );
 }
 

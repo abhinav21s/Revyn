@@ -45,62 +45,66 @@ export default function RecoveriesPage() {
       {/* ── Status Ticker Row ── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {[
-          { label: "Total Cases", value: cases.length, color: "var(--primary)" },
-          { label: "Recovered", value: recovered, color: "var(--success)" },
-          { label: "Escalated", value: escalated, color: "var(--warning)" },
-          { label: "Stopped", value: stopped, color: "var(--destructive)" },
+          { label: "Total Cases", value: cases.length, color: "text-[#0084FF]" },
+          { label: "Recovered", value: recovered, color: "text-emerald-400" },
+          { label: "Escalated", value: escalated, color: "text-amber-400" },
+          { label: "Stopped", value: stopped, color: "text-red-400" },
         ].map((stat) => (
           <div
             key={stat.label}
-            className="p-4 rounded-xl border flex flex-col justify-between"
-            style={{
-              background: "var(--surface)",
-              borderColor: "var(--border)",
-              boxShadow: "var(--shadow-card)",
-            }}
+            className="p-5 rounded-2xl border border-[#1C273E] bg-[#0F1523] shadow-lg shadow-black/40 flex flex-col justify-between"
           >
-            <span className="text-[11px] font-medium uppercase tracking-wider" style={{ color: "var(--subtle)" }}>
+            <span className="text-[11px] font-bold uppercase tracking-wider text-[#64748B]">
               {stat.label}
             </span>
-            <div className="text-[26px] font-bold font-mono tracking-tight mt-1" style={{ color: stat.color }}>
+            <div className={`text-[30px] font-black font-mono tracking-tight mt-1 leading-none ${stat.color}`}>
               {stat.value}
             </div>
           </div>
         ))}
       </div>
 
-      {/* ── Workspace Panel ── */}
-      <Panel
-        title="Recovery cases"
-        description="Dense operational table with root-cause diagnoses, attempt counts, and deterministic policy actions"
-        action={
-          <button
-            onClick={loadCases}
-            disabled={loading}
-            className="px-3 py-1.5 rounded-lg text-[12px] font-medium border flex items-center gap-1.5 transition-colors hover:bg-slate-800"
-            style={{ background: "transparent", borderColor: "var(--border)", color: "var(--muted-foreground)" }}
+      {/* ── Split Layout Container: Left Table + Right Detail (No Overlay / No Transparency) ── */}
+      <div className="flex flex-col xl:flex-row items-start gap-6">
+        {/* Left Side: Recovery Cases Table (always fully opaque & interactive) */}
+        <div className="flex-1 min-w-0 w-full">
+          <Panel
+            title="Recovery cases"
+            description="Dense operational table with root-cause diagnoses, attempt counts, and deterministic policy actions"
+            action={
+              <button
+                onClick={loadCases}
+                disabled={loading}
+                className="px-3.5 py-1.5 rounded-lg text-[12px] font-semibold border border-[#1C273E] bg-[#090D17] hover:bg-[#141C2E] flex items-center gap-1.5 transition-colors text-[#94A3B8] hover:text-[#F8FAFC]"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin text-[#0084FF]" : ""}`} />
+                <span>Refresh telemetry</span>
+              </button>
+            }
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin text-blue-400" : ""}`} />
-            <span>Refresh telemetry</span>
-          </button>
-        }
-      >
-        <RecoveryTable
-          cases={cases}
-          loading={loading}
-          onSelectCase={setSelectedCase}
-          onRefresh={loadCases}
-          onRunBatch={loadCases}
-          compact={false}
-        />
-      </Panel>
+            <RecoveryTable
+              cases={cases}
+              loading={loading}
+              onSelectCase={(c) => setSelectedCase(c)}
+              onRefresh={loadCases}
+              onRunBatch={loadCases}
+              compact={false}
+            />
+          </Panel>
+        </div>
 
-      {/* ── Case Detail Drawer ── */}
-      <CaseDetail
-        paymentCase={selectedCase}
-        onClose={() => setSelectedCase(null)}
-        onCaseUpdated={loadCases}
-      />
+        {/* Right Side: Detailed Section Split (Opaque, side-by-side, no backdrop) */}
+        {selectedCase && (
+          <div className="w-full xl:w-[480px] shrink-0 xl:sticky xl:top-24">
+            <CaseDetail
+              paymentCase={selectedCase}
+              onClose={() => setSelectedCase(null)}
+              onCaseUpdated={loadCases}
+              inline={true}
+            />
+          </div>
+        )}
+      </div>
     </div>
   );
 }

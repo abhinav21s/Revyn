@@ -21,14 +21,21 @@
   --text-muted:     #64748B;
 
   /* Electric Blue Brand */
+  --primary:        #0084FF;
   --accent-primary: #0084FF;
   --accent-glow:    rgba(0, 132, 255, 0.18);
   --accent-text:    #38BDF8;
 
   /* Status Tokens */
+  --success:        #10B981;
   --status-success: #10B981;
   --status-warning: #F59E0B;
+  --destructive:    #EF4444;
   --status-danger:  #EF4444;
+
+  /* Chart Tokens */
+  --chart-1: #0084FF;
+  --chart-5: #334155;
 }
 
 *, *::before, *::after {
