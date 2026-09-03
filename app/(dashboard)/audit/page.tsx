@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { TopBar } from "@/components/top-bar";
 import { AuditLogViewer } from "@/components/audit-log";
 import type { AuditLog } from "@/lib/types";
-import { FileSpreadsheet, ShieldCheck } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
 
 export default function AuditPage() {
   const [logs, setLogs] = useState<AuditLog[]>([]);
@@ -30,29 +30,32 @@ export default function AuditPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 md:space-y-8">
       <TopBar
         title="Immutable Audit Ledger"
-        subtitle="Cryptographically auditable log of every AI diagnosis, policy decision, and execution"
+        subtitle="Every AI diagnosis, policy decision, and execution step — permanently recorded"
       />
 
-      <div className="p-4 rounded-xl bg-[#111827] border border-[#1F2937] flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center">
-            <ShieldCheck className="w-5 h-5" />
+      {/* Compliance Header Card */}
+      <div className="p-5 rounded-2xl bg-[#111827] border border-[#374151]/60 flex items-center justify-between gap-4 shadow-sm">
+        <div className="flex items-center gap-4">
+          <div className="w-11 h-11 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
+            <ShieldCheck className="w-5 h-5 text-blue-400" />
           </div>
           <div>
             <h3 className="text-sm font-bold text-white">
-              Compliance & Safety Audit Standard
+              Compliance-Grade Audit Standard
             </h3>
-            <p className="text-xs text-zinc-400 mt-0.5">
-              Every step from DETECT → DIAGNOSE → DECIDE → EXECUTE is recorded with timestamp, rule trigger, and actor signature.
+            <p className="text-xs text-zinc-500 mt-0.5 leading-relaxed max-w-xl">
+              Every step — DETECT → DIAGNOSE → DECIDE → EXECUTE — is recorded with timestamp, policy rule triggered, and actor signature. No entry is ever deleted or modified.
             </p>
           </div>
         </div>
-        <div className="text-right">
-          <span className="text-xs font-mono text-zinc-400">Total Entries</span>
-          <div className="text-lg font-bold text-white font-mono">{logs.length}</div>
+        <div className="text-right shrink-0">
+          <div className="text-xs text-zinc-500 font-medium">Total Entries</div>
+          <div className="text-2xl font-bold text-white font-mono tabular-nums">
+            {loading ? "—" : logs.length}
+          </div>
         </div>
       </div>
 

@@ -18,49 +18,49 @@ export function StatusBadge({ status }: { status: CaseStatus }) {
   switch (status) {
     case "recovered":
       return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-emerald-500/12 text-emerald-400 border border-emerald-500/25">
           <CheckCircle2 className="w-3.5 h-3.5" />
           Recovered
         </span>
       );
     case "in_progress":
       return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/20">
-          <RefreshCw className="w-3.5 h-3.5 animate-spin text-blue-400" />
+        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-blue-500/12 text-blue-400 border border-blue-500/25">
+          <RefreshCw className="w-3.5 h-3.5 animate-spin" />
           In Progress
         </span>
       );
     case "pending":
       return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-amber-500/12 text-amber-400 border border-amber-500/25">
           <Clock className="w-3.5 h-3.5" />
           Pending
         </span>
       );
     case "escalated":
       return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-purple-500/10 text-purple-400 border border-purple-500/20">
+        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-purple-500/12 text-purple-400 border border-purple-500/25">
           <AlertTriangle className="w-3.5 h-3.5" />
           Escalated
         </span>
       );
     case "unrecoverable":
       return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-zinc-700/30 text-zinc-400 border border-zinc-700">
+        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-[#1F2937] text-zinc-400 border border-[#374151]">
           <XCircle className="w-3.5 h-3.5" />
           Unrecoverable
         </span>
       );
     case "halted":
       return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20">
+        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-rose-500/12 text-rose-400 border border-rose-500/25">
           <ShieldAlert className="w-3.5 h-3.5" />
-          Halted (Kill Switch)
+          Halted
         </span>
       );
     default:
       return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-zinc-800 text-zinc-300">
+        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-[#1F2937] text-zinc-300 border border-[#374151]">
           {status}
         </span>
       );
@@ -91,14 +91,14 @@ export function RootCauseBadge({
   const isLLM = method === "llm_groq";
 
   return (
-    <div className="inline-flex items-center gap-1.5">
-      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-zinc-800 text-zinc-200 border border-zinc-700">
+    <div className="inline-flex items-center gap-1.5 flex-wrap">
+      <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-[#1F2937] text-zinc-200 border border-[#374151]/60">
         {label}
       </span>
       {isLLM && (
         <span
-          title="Diagnosed via Groq LLM (Ambiguous Case)"
-          className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded text-[10px] font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30"
+          title="Diagnosed via Groq Llama 3.3 70B (Ambiguous case)"
+          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-500/15 text-indigo-300 border border-indigo-500/25"
         >
           <Zap className="w-2.5 h-2.5" />
           Groq AI
@@ -114,32 +114,32 @@ export function ActionBadge({ action }: { action?: PolicyAction }) {
   switch (action) {
     case "smart_retry":
       return (
-        <span className="inline-flex items-center gap-1 text-xs font-medium text-blue-400">
-          <RefreshCw className="w-3 h-3" /> Smart Retry
+        <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-400">
+          <RefreshCw className="w-3.5 h-3.5" /> Smart Retry
         </span>
       );
     case "send_payment_link":
       return (
-        <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-400">
-          <Send className="w-3 h-3" /> Razorpay Link
+        <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-400">
+          <Send className="w-3.5 h-3.5" /> Razorpay Link
         </span>
       );
     case "escalate_to_human":
       return (
-        <span className="inline-flex items-center gap-1 text-xs font-medium text-purple-400">
-          <AlertTriangle className="w-3 h-3" /> Human Escalation
+        <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-purple-400">
+          <AlertTriangle className="w-3.5 h-3.5" /> Escalate
         </span>
       );
     case "mark_unrecoverable":
       return (
-        <span className="inline-flex items-center gap-1 text-xs font-medium text-zinc-400">
-          <UserX className="w-3 h-3" /> Hard Stop
+        <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-zinc-400">
+          <UserX className="w-3.5 h-3.5" /> Hard Stop
         </span>
       );
     case "halt_kill_switch":
       return (
-        <span className="inline-flex items-center gap-1 text-xs font-medium text-rose-400">
-          <ShieldAlert className="w-3 h-3" /> Kill Switch
+        <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-rose-400">
+          <ShieldAlert className="w-3.5 h-3.5" /> Kill Switch
         </span>
       );
     default:

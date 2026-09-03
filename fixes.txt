@@ -1,0 +1,159 @@
+================================================================================
+REVYN – COMPLETE UI / UX CHANGE LIST
+Ordered list of all visual, spacing, branding and interaction improvements
+================================================================================
+
+1. BRANDING & LOGO
+------------------
+- Remove the lightning bolt icon completely.
+- Design a new professional app logo (suggested: abstract “R” monogram or a clean shield + pulse/line motif in blue gradient).
+- Place the new logo in the top-left of the sidebar.
+- Use the same logo as the browser favicon (favicon.ico + apple-touch-icon).
+- Update the browser tab title to simply “Revyn” or “Revyn – Revenue Recovery”.
+- Remove any Next.js logo or default favicon if still present.
+
+2. REMOVE BUILDATHON / TRACK REFERENCES
+---------------------------------------
+- Completely remove the bottom-left card that says “Razorpay Track 03” and “Buildathon 26”.
+- Remove any other visible text that mentions “Track 03”, “Buildathon”, “hackathon” or similar from the entire UI.
+- Keep only product-related labels (Policy Engine Active, Test Mode, etc.).
+
+3. GLOBAL DESIGN SYSTEM
+-----------------------
+Color Palette (keep dark fintech theme, refine values):
+- Page background:        #0B0F19
+- Sidebar background:     #0B0F19 or #0F172A
+- Card / surface:         #111827
+- Elevated surface:       #1F2937
+- Border:                 #1F2937 → #374151 (subtle)
+- Primary accent:         #3B82F6
+- Primary hover:          #2563EB
+- Success:                #10B981
+- Warning:                #F59E0B
+- Danger / Kill:          #EF4444
+- Text primary:           #F9FAFB
+- Text secondary:         #9CA3AF
+- Text muted:             #6B7280
+
+Typography:
+- Primary font: Inter (or Geist Sans)
+- Monospace (IDs, code): JetBrains Mono or Geist Mono
+- Headings: font-semibold / font-bold
+- Body: font-normal, 14–15px
+- Metric numbers: text-2xl or text-3xl, font-bold, tracking-tight
+
+Spacing System (strict 4/8px scale):
+- Use consistent gaps: 4, 8, 12, 16, 20, 24, 32, 40, 48px
+- Main content horizontal padding: 24px or 32px
+- Card internal padding: 20px or 24px
+- Section vertical spacing: 24–32px between major blocks
+
+Border radius:
+- Cards: 12px (rounded-xl)
+- Buttons & badges: 8px (rounded-lg)
+- Small pills: 9999px (rounded-full)
+
+4. SIDEBAR
+----------
+- Increase logo + product name size slightly.
+- Make the active navigation item more distinct (stronger background + 3px left accent bar in primary blue).
+- Improve vertical spacing between nav items (12–14px).
+- “Policy Engine Active” badge should be cleaner and better aligned.
+- Remove the entire bottom “Razorpay Track 03 / Buildathon 26” block.
+- Add subtle bottom border or spacing so the sidebar feels finished.
+
+5. TOP BAR / HEADER
+-------------------
+- Keep page title + short subtitle.
+- Make the status badges (RAZORPAY TEST MODE, Safety Guardrails OK) more refined pills with better contrast and consistent height.
+- Ensure proper right-side alignment and breathing room.
+- When Kill Switch is active, show a clear red banner or strong visual indicator across the top.
+
+6. METRIC CARDS (DASHBOARD TOP ROW)
+-----------------------------------
+- Never show completely empty dark rectangles.
+- Each card must contain:
+  - Small icon (top-left or left)
+  - Large bold number
+  - Clear label
+  - Optional secondary line (e.g. “20 total payment failures ingested”)
+- Consistent card height and internal padding (20–24px).
+- Equal gap between the four cards (16–20px).
+- Subtle border + very soft shadow.
+- Loading state: use skeleton loaders instead of blank cards.
+
+7. EXECUTE RECOVERY PIPELINE SECTION
+------------------------------------
+- Improve visual hierarchy of the title and description.
+- Make the Batch dropdown and “Run Batch Recovery” button more prominent.
+- Add clear loading state on the button (“Running Pipeline…” with spinner).
+- After success, show a temporary green success banner with summary (e.g. “20 cases processed • 11 links created • 5 retries • 2 escalated”).
+- Trash / Reset button should have a confirmation modal and clearer icon/tooltip.
+
+8. CASES TABLE
+--------------
+- Better header background and stronger column hierarchy.
+- Consistent column alignment (especially Amount and Status).
+- Status badges must be colorful, rounded, and easy to scan (In Progress, Recovered, Escalated, Unrecoverable, Halted).
+- Improve row hover state.
+- “Inspect” action should be clearer (button or chevron).
+- Empty state: replace plain text with a proper empty illustration + message + primary CTA (“Run Batch Recovery”).
+- Loading state: skeleton rows instead of only a spinner text.
+
+9. FILTER TABS & SEARCH
+-----------------------
+- Make filter pills larger and easier to click.
+- Show count badges clearly.
+- Search input should have better height, padding, and focus ring.
+- Align search and filters on the same horizontal line with proper spacing.
+
+10. CASE DETAIL DRAWER
+----------------------
+- Smooth slide-over from the right with proper overlay.
+- Clear header with Case ID, merchant, amount and status.
+- “Simulate Customer Paid” button should be highly visible (primary or success color).
+- Diagnosis, Policy Decision and Execution sections should be clearly separated with good spacing.
+- Hinglish WhatsApp message block: make “Copy” and “Open in WhatsApp” buttons obvious.
+- Audit timeline inside the drawer should be easy to scan.
+
+11. AUDIT TRAIL PAGE
+--------------------
+- Keep the step filter tabs (All, DETECT, DIAGNOSE, etc.).
+- Improve row density and readability.
+- Expandable detail rows should open smoothly and show formatted JSON / metadata.
+- Better empty state when no logs exist.
+- Total Entries counter should be more prominent.
+
+12. SETTINGS & SAFETY PAGE
+--------------------------
+- Kill Switch section: make the danger state very clear (red accents, strong button).
+- When active, change button to “Deactivate Kill Switch” (green/success style).
+- Policy rules cards: improve internal spacing and typography hierarchy.
+- Integration health cards (Razorpay, Groq, Supabase): keep the green “Connected” / “Ready” badges, improve alignment and spacing.
+- Remove any remaining buildathon references.
+
+13. GLOBAL INTERACTION & FEEDBACK
+---------------------------------
+- All buttons need clear hover, active and disabled states.
+- Loading spinners should be consistent in style and color.
+- Success / error toasts or banners should appear for important actions (batch completed, kill switch toggled, payment simulated).
+- Confirmation modals for destructive actions (Reset, Activate Kill Switch).
+
+14. RESPONSIVE / MOBILE
+-----------------------
+- Sidebar should collapse into a hamburger menu on smaller screens.
+- Metric cards should stack cleanly (2×2 or 1 column).
+- Tables should become horizontally scrollable or switch to card layout on mobile.
+- Maintain proper padding on all screen sizes (minimum 16px side padding).
+
+15. FINAL POLISH
+----------------
+- Ensure consistent 8px spacing rhythm everywhere.
+- Remove any leftover Next.js or default assets.
+- Favicon must use the new logo.
+- Check contrast of all text on dark backgrounds (WCAG friendly).
+- Make sure the overall feel is calm, premium, and trustworthy (fintech-grade).
+
+================================================================================
+END OF UI / UX CHANGE LIST
+================================================================================

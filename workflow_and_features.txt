@@ -1,0 +1,127 @@
+Here is the complete walkthrough of how Revyn works, what every section displays, and what every button triggers when clicked:
+
+🔄 The Core Revyn Lifecycle
+Revyn operates in 5 automated stages whenever a failed payment is processed:
+
+[1. DETECT] ───► [2. DIAGNOSE] ───► [3. DECIDE] ───► [4. EXECUTE] ───► [5. AUDIT & MEASURE]
+Failed Payment    Rule Engine or     Deterministic     Razorpay Link /    Immutable Ledger &
+Ingested          Groq AI            Policy Rules      Smart Retry        Real-Time Metrics
+Detect: Ingests payment failure (amount, error code, customer details).
+Diagnose: Identifies root cause (insufficient_balance, bank_timeout, mandate_revoked, etc.). Uses deterministic rule matching first, or Groq AI (llama-3.3-70b) for ambiguous errors.
+Decide: Hard-coded Policy Engine decides the safe action (smart_retry, send_payment_link, escalate_to_human, mark_unrecoverable). The LLM has zero money-moving authority.
+Execute: Bounded execution — creates a real Razorpay Test Mode Payment Link (https://rzp.io/i/...) or schedules a smart retry.
+Audit & Measure: Logs the decision with full reasoning to the immutable audit ledger and updates recovery metrics.
+🖥️ 1. Main Dashboard (/)
+A. Top Metrics Cards (Top Row)
+Total Revenue at Risk: Total monetary value of all ingested payment failures (in ₹).
+Recovered Revenue: Total money recovered through paid Razorpay links.
+Recovery Rate: Calculated as (Recovered / Total at Risk) * 100% with a +X% lift badge comparing against the naïve retry baseline ($\approx 22%$).
+Policy & Safety Stops: Count of transactions stopped by hard guardrails (escalated + unrecoverable) with confirmation of 0 policy violations.
+B. "Execute Recovery Pipeline" Section
+🔘 1. Batch Size Dropdown (10, 20, 50 cases)
+What it is: Selects how many synthetic failed payments to generate.
+Purpose: Allows quick testing of small batches (10) or larger statistical batches (50).
+🔘 2. Run Batch Recovery Button
+What it does:
+Generates realistic failed payments across Indian merchants (Swiggy, Zepto, Meesho, Blinkit) and failure types (insufficient balance, UPI downtime, expired cards, revoked mandates, timeout).
+Sends them through the Diagnosis & Policy Engine.
+Generates Razorpay Test Mode Payment Links for eligible cases.
+Writes immutable audit logs for every step.
+Expected Result:
+Button shows a loading spinner: "Running Pipeline...".
+A green status banner appears summarizing the batch (e.g. 20 payments processed: 11 Razorpay links created, 5 smart retries, 2 escalated, 2 safety stops).
+The metrics cards and the table below refresh instantly.
+🔘 3. Trash / Reset Button (Next to Run Batch)
+What it does: Deletes all demo cases and clears the workspace.
+Expected Result: A confirmation prompt appears. Once confirmed, all table rows and metrics reset to zero so you can run a clean demo.
+C. Recent Recoveries Table
+🔘 Filter Tabs (All Cases, Recovered, In Progress, Escalated, Unrecoverable)
+What it does: Filters the table rows by status.
+Number Pill: Shows the exact count of cases in each category.
+🔘 Search Bar
+What it does: Live filters by customer name, email, error code, or case ID.
+🔘 Inspect Button (or clicking any row in the table)
+What it does: Opens the Case Detail Drawer (slide-over panel from the right).
+📑 2. Case Detail Drawer (Inspection Panel)
+When you click on any case row or the Inspect button, this slide-over panel opens:
+
+Sections inside the Drawer:
+Case Header & Amount: Shows Case ID, merchant name, timestamp, and amount in ₹.
+Simulate Customer Paid Button:
+Purpose: For demoing without having to open the Razorpay link manually.
+What it does: Simulates the customer clicking the Razorpay link and completing payment.
+Expected Result: Status badge turns green (RECOVERED), metric cards update, and a new recovery entry is written to the audit ledger.
+Step 1: Root Cause Diagnosis Box:
+Shows raw error code and error message.
+Shows diagnosed root cause, AI confidence score (e.g. 98%), and whether it was diagnosed via Rule Engine or Groq AI.
+Step 2: Deterministic Policy Decision Box:
+Shows the exact policy rule triggered (SMART_RETRY, PAYMENT_LINK, ECONOMIC_FLOOR, HARD_STOP_MANDATE).
+Displays the hard-coded reasoning why this action was chosen.
+Step 3: Razorpay Test Mode Link & WhatsApp Copy:
+Copy Link / Open Link Icon: Copies the https://rzp.io/i/... short URL to clipboard or opens it in a new tab.
+Hinglish WhatsApp Recovery Copy: Displays the personalized recovery message generated for the customer in Hinglish (e.g., "Namaste Priya! Aapka ₹499 ka payment bank balance issue ki wajah se complete nahi ho paya...").
+Case Audit History Timeline:
+Displays the chronologically ordered audit logs specifically for this payment case.
+📋 3. Recoveries Workspace Page (/recoveries)
+What it shows: Full-page view of all payment cases across all merchants with expanded capacity (up to 100+ cases).
+Interactive features: Full search, multi-status tab filters, and clicking any case opens the full lifecycle drawer.
+🛡️ 4. Immutable Audit Ledger Page (/audit)
+What it shows: Compliance view of every single event recorded by the system (DETECT, DIAGNOSE, DECIDE, EXECUTE, RECOVERED, SETTINGS).
+Interactive Features:
+Step Filter Tabs: Click DIAGNOSE, DECIDE, EXECUTE, etc., to view only events from that specific phase.
+Expandable Row (Click any row): Expands an inline JSON Payload Inspector showing raw metadata, actor signature, and cryptographic reason.
+⚙️ 5. Settings & Safety Page (/settings)
+🔘 ACTIVATE KILL SWITCH / Deactivate Kill Switch Button
+What it does: Triggers the emergency halt mode.
+Expected Result:
+A confirmation modal pops up explaining that all automated recoveries will freeze.
+Once confirmed, the kill switch turns red (KILL SWITCH ACTIVE).
+If anyone attempts to run a batch while the kill switch is active, the system halts execution and safely marks cases as HALTED.
+Clicking Deactivate Kill Switch resumes standard operation.
+Other sections on Settings:
+Policy Engine Guardrails: Read-only reference of the hard-coded rules (Max 3 retries, ₹10 economic floor, Mandate hard-stop, 2-hour salary window).
+Gateway & AI Integration Health: Real-time indicator cards showing whether Razorpay, Groq AI, and Supabase are connected.
+🎯 Summary Demo Script for Judges
+Go to Dashboard (/): Click Run Batch Recovery (20 cases).
+Watch the batch process: See metrics jump (Total at Risk vs Recovered).
+Inspect an In Progress case: Click Inspect → Review the diagnosis and Hinglish message → Click Simulate Customer Paid → Watch Recovered Amount and Recovery Rate increase immediately.
+Inspect a Stopped case: Filter by Unrecoverable → Inspect a case with amount < ₹10 or mandate_revoked to show how hard safety guardrails prevent compliance violations.
+Visit Audit Trail (/audit): Show the timestamped audit trail with expandable JSON metadata.
+Visit Settings (/settings): Toggle the Kill Switch to demonstrate fail-safe operations.
+
+
+
+----- kill switch ----
+
+When you press the ACTIVATE KILL SWITCH button, Revyn immediately enters a global emergency lockdown mode.
+
+Here is exactly what happens across the entire system:
+
+🚨 1. Immediate Execution Freeze (Code & Policy Level)
+Zero Money-Moving Actions: The Policy Engine enforces Rule 0 (KILL_SWITCH), which supersedes all other rules.
+No Payment Links: Revyn is strictly blocked from creating any new Razorpay payment links or orders.
+No Retries: All scheduled retries and customer messaging (SMS/WhatsApp) are paused instantly.
+Batch Processing Refused: The /api/batch/run endpoint returns HTTP 503 and refuses to process any batch until deactivated.
+🛑 2. Incoming Cases Are Safely Parked
+Any failed payments that arrive while the kill switch is active are not processed.
+They are safely parked with the status Halted (Kill Switch) (red badge in the UI) to prevent unauthorized automated actions or infinite retry loops.
+📜 3. Logged to the Immutable Audit Ledger
+An entry is immediately recorded in the audit trail:
+json
+{
+  "step": "SETTINGS",
+  "action": "kill_switch_activated",
+  "reason": "Kill switch ACTIVATED by operator",
+  "policy_rule": "KILL_SWITCH",
+  "actor": "operator"
+}
+🖥️ 4. Visual UI Changes
+Sidebar & Top Bar: A glowing red warning banner appears: KILL SWITCH ACTIVE.
+Run Batch Button: Gets disabled so no accidental batches can be triggered.
+Settings Page: The button changes to green: Deactivate Kill Switch (Resume).
+🔄 What Happens When You Deactivate It?
+When you click Deactivate Kill Switch (Resume):
+
+It logs kill_switch_deactivated to the audit ledger.
+The Policy Engine re-enables standard evaluation rules.
+The UI returns to normal, and batch runs can be resumed safely.

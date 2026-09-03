@@ -7,10 +7,8 @@ import {
   TrendingUp,
   AlertCircle,
   CheckCircle2,
-  Clock,
-  ArrowUpRight,
   ShieldCheck,
-  Zap,
+  ArrowUpRight,
 } from "lucide-react";
 
 interface MetricsCardsProps {
@@ -18,122 +16,149 @@ interface MetricsCardsProps {
   loading?: boolean;
 }
 
+function SkeletonCard() {
+  return (
+    <div className="p-6 rounded-2xl bg-[#111827] border border-[#374151]/60 space-y-4 animate-pulse shadow-sm">
+      <div className="flex items-center justify-between">
+        <div className="h-3 w-28 bg-[#374151]/80 rounded-full" />
+        <div className="w-9 h-9 rounded-xl bg-[#1F2937]" />
+      </div>
+      <div className="h-8 w-32 bg-[#374151]/80 rounded-lg" />
+      <div className="h-3 w-48 bg-[#374151]/50 rounded-full" />
+    </div>
+  );
+}
+
 export function MetricsCards({ metrics, loading = false }: MetricsCardsProps) {
-  if (loading || !metrics) {
+  if (loading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {[1, 2, 3, 4].map((i) => (
-          <div
-            key={i}
-            className="h-32 rounded-xl bg-[#111827] border border-[#1F2937] animate-pulse"
-          />
-        ))}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        {[1, 2, 3, 4].map((i) => <SkeletonCard key={i} />)}
       </div>
     );
   }
 
-  const isLiftPositive = metrics.lift_over_baseline > 0;
+  const total = metrics?.total_cases ?? 0;
+  const totalAtRisk = metrics?.total_at_risk_paise ?? 0;
+  const recovered = metrics?.recovered_paise ?? 0;
+  const recoveryRate = metrics?.recovery_rate ?? 0;
+  const escalated = metrics?.escalated_count ?? 0;
+  const unrecoverable = metrics?.unrecoverable_count ?? 0;
+  const baseline = metrics?.baseline_recovery_rate ?? 0.22;
+  const lift = metrics?.lift_over_baseline ?? 0;
+  const isLiftPositive = lift > 0;
 
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Card 1: Total Revenue at Risk */}
-        <div className="p-5 rounded-xl bg-[#111827] border border-[#1F2937] relative overflow-hidden card-hover">
-          <div className="flex items-center justify-between text-zinc-400 mb-2">
-            <span className="text-xs font-medium uppercase tracking-wider">
-              Total Revenue at Risk
-            </span>
-            <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-400">
-              <AlertCircle className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="text-2xl font-bold text-white tracking-tight">
-            {formatCurrency(metrics.total_at_risk_paise)}
-          </div>
-          <p className="text-xs text-zinc-400 mt-2 flex items-center gap-1.5">
-            <span className="font-semibold text-zinc-300">
-              {metrics.total_cases}
-            </span>{" "}
-            total payment failures ingested
-          </p>
-        </div>
-
-        {/* Card 2: Revenue Recovered */}
-        <div className="p-5 rounded-xl bg-[#111827] border border-[#1F2937] relative overflow-hidden card-hover">
-          <div className="flex items-center justify-between text-zinc-400 mb-2">
-            <span className="text-xs font-medium uppercase tracking-wider text-emerald-400">
-              Recovered Revenue
-            </span>
-            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400">
-              <CheckCircle2 className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="text-2xl font-bold text-emerald-400 tracking-tight">
-            {formatCurrency(metrics.recovered_paise)}
-          </div>
-          <div className="text-xs text-emerald-300/80 mt-2 flex items-center gap-1 font-medium">
-            <ArrowUpRight className="w-3.5 h-3.5 text-emerald-400" />
-            <span>Verified via Razorpay Test Mode</span>
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      {/* Card 1 – Total Revenue at Risk */}
+      <div className="p-6 rounded-2xl bg-[#111827] border border-[#374151]/60 shadow-sm hover:border-[#374151] hover:shadow-md transition-all duration-200 group">
+        <div className="flex items-center justify-between mb-4">
+          <span className="text-xs font-semibold text-zinc-400 uppercase tracking-widest">
+            Revenue at Risk
+          </span>
+          <div className="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center group-hover:bg-amber-500/15 transition-colors">
+            <AlertCircle className="w-4.5 h-4.5 text-amber-400" />
           </div>
         </div>
+        <div className="text-3xl font-bold text-white tracking-tight mb-2">
+          {total === 0 ? "₹—" : formatCurrency(totalAtRisk)}
+        </div>
+        <p className="text-xs text-zinc-500 flex items-center gap-1.5">
+          {total === 0 ? (
+            <span className="italic">Run a batch to populate metrics</span>
+          ) : (
+            <>
+              <span className="text-zinc-300 font-semibold">{total}</span>
+              <span>total payment failures ingested</span>
+            </>
+          )}
+        </p>
+      </div>
 
-        {/* Card 3: Measured Recovery Rate & Baseline Comparison */}
-        <div className="p-5 rounded-xl bg-[#111827] border border-[#1F2937] relative overflow-hidden card-hover">
-          <div className="flex items-center justify-between text-zinc-400 mb-2">
-            <span className="text-xs font-medium uppercase tracking-wider text-blue-400">
-              Recovery Rate
-            </span>
-            <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-400">
-              <TrendingUp className="w-4 h-4" />
-            </div>
+      {/* Card 2 – Recovered Revenue */}
+      <div className="p-6 rounded-2xl bg-[#111827] border border-[#374151]/60 shadow-sm hover:border-emerald-500/30 hover:shadow-emerald-900/20 hover:shadow-md transition-all duration-200 group">
+        <div className="flex items-center justify-between mb-4">
+          <span className="text-xs font-semibold text-emerald-400 uppercase tracking-widest">
+            Recovered Revenue
+          </span>
+          <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center group-hover:bg-emerald-500/15 transition-colors">
+            <CheckCircle2 className="w-4.5 h-4.5 text-emerald-400" />
           </div>
-          <div className="text-2xl font-bold text-white tracking-tight">
-            {formatPercent(metrics.recovery_rate)}
+        </div>
+        <div className="text-3xl font-bold text-emerald-400 tracking-tight mb-2">
+          {total === 0 ? "₹—" : formatCurrency(recovered)}
+        </div>
+        <p className="text-xs text-zinc-500 flex items-center gap-1">
+          {total === 0 ? (
+            <span className="italic">No recoveries yet</span>
+          ) : (
+            <>
+              <ArrowUpRight className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+              <span>Verified via Razorpay Test Mode</span>
+            </>
+          )}
+        </p>
+      </div>
+
+      {/* Card 3 – Recovery Rate & Lift */}
+      <div className="p-6 rounded-2xl bg-[#111827] border border-[#374151]/60 shadow-sm hover:border-blue-500/30 hover:shadow-md transition-all duration-200 group">
+        <div className="flex items-center justify-between mb-4">
+          <span className="text-xs font-semibold text-blue-400 uppercase tracking-widest">
+            Recovery Rate
+          </span>
+          <div className="w-9 h-9 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center group-hover:bg-blue-500/15 transition-colors">
+            <TrendingUp className="w-4.5 h-4.5 text-blue-400" />
           </div>
-          <div className="text-xs mt-2 flex items-center gap-1.5">
+        </div>
+        <div className="text-3xl font-bold text-white tracking-tight mb-2">
+          {total === 0 ? "—%" : formatPercent(recoveryRate)}
+        </div>
+        <div className="flex items-center gap-1.5">
+          {total > 0 && (
             <span
-              className={`inline-flex items-center font-semibold ${
+              className={`text-xs font-semibold flex items-center gap-0.5 ${
                 isLiftPositive ? "text-emerald-400" : "text-zinc-400"
               }`}
             >
-              +{formatPercent(Math.max(0, metrics.lift_over_baseline))} lift
+              {isLiftPositive ? "+" : ""}
+              {formatPercent(Math.abs(lift))} lift
             </span>
-            <span className="text-zinc-400 text-[11px]">
-              vs naive retry ({formatPercent(metrics.baseline_recovery_rate)})
-            </span>
+          )}
+          <span className="text-xs text-zinc-500">
+            vs naive baseline ({formatPercent(baseline)})
+          </span>
+        </div>
+      </div>
+
+      {/* Card 4 – Safety Stops */}
+      <div className="p-6 rounded-2xl bg-[#111827] border border-[#374151]/60 shadow-sm hover:border-purple-500/30 hover:shadow-md transition-all duration-200 group">
+        <div className="flex items-center justify-between mb-4">
+          <span className="text-xs font-semibold text-purple-400 uppercase tracking-widest">
+            Safety Stops
+          </span>
+          <div className="w-9 h-9 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center group-hover:bg-purple-500/15 transition-colors">
+            <ShieldCheck className="w-4.5 h-4.5 text-purple-400" />
           </div>
         </div>
-
-        {/* Card 4: Action Breakdown & Exceptions */}
-        <div className="p-5 rounded-xl bg-[#111827] border border-[#1F2937] relative overflow-hidden card-hover">
-          <div className="flex items-center justify-between text-zinc-400 mb-2">
-            <span className="text-xs font-medium uppercase tracking-wider text-purple-400">
-              Policy & Safety Stops
-            </span>
-            <div className="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-400">
-              <ShieldCheck className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="text-2xl font-bold text-white tracking-tight">
-            {metrics.escalated_count + metrics.unrecoverable_count}
-          </div>
-          <div className="text-xs text-zinc-400 mt-2 flex items-center justify-between">
-            <span>
-              <span className="text-purple-400 font-medium">
-                {metrics.escalated_count}
-              </span>{" "}
-              escalated
-            </span>
-            <span className="text-zinc-600">•</span>
-            <span>
-              <span className="text-zinc-300 font-medium">
-                {metrics.unrecoverable_count}
-              </span>{" "}
-              unrecoverable
-            </span>
-            <span className="text-zinc-600">•</span>
-            <span>0 policy violations</span>
-          </div>
+        <div className="text-3xl font-bold text-white tracking-tight mb-2">
+          {total === 0 ? "—" : escalated + unrecoverable}
+        </div>
+        <div className="text-xs text-zinc-500 flex items-center gap-2 flex-wrap">
+          {total === 0 ? (
+            <span className="italic">Policy violations: 0</span>
+          ) : (
+            <>
+              <span>
+                <span className="text-purple-400 font-semibold">{escalated}</span> escalated
+              </span>
+              <span className="text-zinc-700">·</span>
+              <span>
+                <span className="text-zinc-300 font-semibold">{unrecoverable}</span> unrecoverable
+              </span>
+              <span className="text-zinc-700">·</span>
+              <span className="text-emerald-400 font-semibold">0 violations</span>
+            </>
+          )}
         </div>
       </div>
     </div>

@@ -5,7 +5,13 @@ import { TopBar } from "@/components/top-bar";
 import { RecoveryTable } from "@/components/recovery-table";
 import { CaseDetail } from "@/components/case-detail";
 import type { PaymentCase } from "@/lib/types";
-import { Layers, RefreshCw } from "lucide-react";
+import {
+  Layers,
+  CheckCircle2,
+  AlertTriangle,
+  XCircle,
+  RefreshCw,
+} from "lucide-react";
 
 export default function RecoveriesPage() {
   const [cases, setCases] = useState<PaymentCase[]>([]);
@@ -19,7 +25,7 @@ export default function RecoveriesPage() {
   const loadCases = async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/cases?limit=100");
+      const res = await fetch("/api/cases?limit=200");
       if (res.ok) {
         const data = await res.json();
         setCases(data.cases || []);
@@ -31,31 +37,104 @@ export default function RecoveriesPage() {
     }
   };
 
+  // Computed summaries
+  const recovered = cases.filter((c) => c.status === "recovered").length;
+  const inProgress = cases.filter((c) => c.status === "in_progress").length;
+  const escalated = cases.filter((c) => c.status === "escalated").length;
+  const unrecoverable = cases.filter((c) => c.status === "unrecoverable").length;
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 md:space-y-8">
       <TopBar
         title="Recovery Workspace"
-        subtitle="Manage and inspect all failed payment recovery cases across merchants"
+        subtitle="Inspect, filter and manage all failed payment recovery cases"
       />
 
-      <div className="space-y-4">
+      {/* Quick stats row */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        {[
+          {
+            label: "Total Cases",
+            value: cases.length,
+            icon: Layers,
+            color: "text-blue-400",
+            bg: "bg-blue-500/8 border-blue-500/20",
+          },
+          {
+            label: "Recovered",
+            value: recovered,
+            icon: CheckCircle2,
+            color: "text-emerald-400",
+            bg: "bg-emerald-500/8 border-emerald-500/20",
+          },
+          {
+            label: "Escalated",
+            value: escalated,
+            icon: AlertTriangle,
+            color: "text-purple-400",
+            bg: "bg-purple-500/8 border-purple-500/20",
+          },
+          {
+            label: "Unrecoverable",
+            value: unrecoverable,
+            icon: XCircle,
+            color: "text-zinc-400",
+            bg: "bg-[#1F2937] border-[#374151]/60",
+          },
+        ].map((stat) => {
+          const Icon = stat.icon;
+          return (
+            <div
+              key={stat.label}
+              className={`flex items-center gap-3 p-4 rounded-xl border ${stat.bg} transition-all`}
+            >
+              <Icon className={`w-5 h-5 ${stat.color} shrink-0`} />
+              <div>
+                <div className={`text-xl font-bold tabular-nums ${stat.color}`}>
+                  {loading ? (
+                    <span className="inline-block w-8 h-5 bg-[#374151]/60 rounded animate-pulse" />
+                  ) : (
+                    stat.value
+                  )}
+                </div>
+                <div className="text-xs text-zinc-500 mt-0.5">{stat.label}</div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Full table with header */}
+      <div className="space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Layers className="w-5 h-5 text-blue-400" />
-            <h2 className="text-lg font-bold text-white tracking-tight">
-              All Payment Cases ({cases.length})
+            <Layers className="w-4 h-4 text-blue-400" />
+            <h2 className="text-[15px] font-bold text-white tracking-tight">
+              All Payment Cases
             </h2>
+            <span className="text-xs text-zinc-500 font-mono">
+              ({loading ? "…" : cases.length})
+            </span>
           </div>
+          <button
+            onClick={loadCases}
+            disabled={loading}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#1F2937] hover:bg-[#374151] text-zinc-400 hover:text-zinc-200 border border-[#374151]/60 text-xs font-semibold transition-all"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin text-blue-400" : ""}`} />
+            Refresh
+          </button>
         </div>
 
         <RecoveryTable
           cases={cases}
           loading={loading}
-          onSelectCase={(c) => setSelectedCase(c)}
+          onSelectCase={setSelectedCase}
           onRefresh={loadCases}
         />
       </div>
 
+      {/* Case Detail Drawer */}
       <CaseDetail
         paymentCase={selectedCase}
         onClose={() => setSelectedCase(null)}

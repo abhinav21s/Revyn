@@ -1,13 +1,13 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { TopBar } from "@/components/top-bar";
 import { MetricsCards } from "@/components/metrics-cards";
 import { BatchRunner } from "@/components/batch-runner";
 import { RecoveryTable } from "@/components/recovery-table";
 import { CaseDetail } from "@/components/case-detail";
 import type { PaymentCase, BatchMetrics } from "@/lib/types";
-import { Zap, ShieldCheck, ArrowRight, Layers, FileSpreadsheet } from "lucide-react";
+import { Layers, ArrowRight } from "lucide-react";
 import Link from "next/link";
 
 export default function DashboardPage() {
@@ -16,72 +16,63 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [selectedCase, setSelectedCase] = useState<PaymentCase | null>(null);
   const [killSwitchActive, setKillSwitchActive] = useState(false);
+  const [runBatchTrigger, setRunBatchTrigger] = useState(0);
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      // Fetch Metrics
-      const mRes = await fetch("/api/metrics");
-      if (mRes.ok) {
-        const mData = await mRes.json();
-        setMetrics(mData);
-      }
-
-      // Fetch Recent Cases
-      const cRes = await fetch("/api/cases?limit=20");
-      if (cRes.ok) {
-        const cData = await cRes.json();
-        setCases(cData.cases || []);
-      }
-
-      // Fetch Kill Switch Setting
-      const sRes = await fetch("/api/settings");
-      if (sRes.ok) {
-        const sData = await sRes.json();
-        setKillSwitchActive(sData.settings?.kill_switch === "true");
-      }
+      const [mRes, cRes, sRes] = await Promise.all([
+        fetch("/api/metrics"),
+        fetch("/api/cases?limit=20"),
+        fetch("/api/settings"),
+      ]);
+      if (mRes.ok) setMetrics(await mRes.json());
+      if (cRes.ok) { const d = await cRes.json(); setCases(d.cases || []); }
+      if (sRes.ok) { const d = await sRes.json(); setKillSwitchActive(d.settings?.kill_switch === "true"); }
     } catch (e) {
       console.error("Failed to load dashboard data:", e);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   return (
-    <div className="space-y-6">
-      {/* Top Bar */}
+    <div className="space-y-6 md:space-y-8">
       <TopBar
         title="Revenue Recovery Overview"
-        subtitle="AI-Driven Bounded Payment Recovery for Indian Merchants"
+        subtitle="Bounded AI agent for recovering failed payments across Indian merchants"
       />
 
-      {/* Big Metrics Cards */}
+      {/* Metrics */}
       <MetricsCards metrics={metrics} loading={loading} />
 
-      {/* Batch Runner Tool */}
+      {/* Batch Runner */}
       <BatchRunner
         onBatchCompleted={loadData}
         killSwitchActive={killSwitchActive}
       />
 
-      {/* Recent Recoveries Section */}
-      <div className="space-y-3">
+      {/* Recent Cases */}
+      <div className="space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Layers className="w-4 h-4 text-blue-400" />
-            <h2 className="text-base font-bold text-white tracking-tight">
-              Recent Payment Recovery Cases
+            <h2 className="text-[15px] font-bold text-white tracking-tight">
+              Recent Payment Cases
             </h2>
+            {!loading && (
+              <span className="text-xs text-zinc-500 font-mono">({cases.length})</span>
+            )}
           </div>
           <Link
             href="/recoveries"
-            className="text-xs text-blue-400 hover:text-blue-300 font-medium flex items-center gap-1 transition"
+            className="text-xs text-blue-400 hover:text-blue-300 font-semibold flex items-center gap-1 transition-colors"
           >
-            <span>View All Workspace Cases</span>
+            View all cases
             <ArrowRight className="w-3.5 h-3.5" />
           </Link>
         </div>
@@ -89,12 +80,13 @@ export default function DashboardPage() {
         <RecoveryTable
           cases={cases}
           loading={loading}
-          onSelectCase={(c) => setSelectedCase(c)}
+          onSelectCase={setSelectedCase}
           onRefresh={loadData}
+          onRunBatch={() => setRunBatchTrigger((n) => n + 1)}
         />
       </div>
 
-      {/* Case Detail Inspection Drawer */}
+      {/* Case Detail Drawer */}
       <CaseDetail
         paymentCase={selectedCase}
         onClose={() => setSelectedCase(null)}
