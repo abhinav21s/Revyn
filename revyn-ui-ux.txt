@@ -1,0 +1,179 @@
+=================================================================
+REVYN — PAYMENT RECOVERY AGENT
+UI / UX SPECIFICATION DOCUMENT
+Version 2.0 — Black + Electric Blue Theme
+=================================================================
+
+1. DESIGN INTENT
+-----------------------------------------------------------------
+A professional, high-density fintech operations console for a
+payment-recovery agent. The interface must feel like a trading
+desk: dark, calm, data-forward, with every automated action
+explainable and bounded by visible safety controls.
+
+Visual direction: pure-black canvas with electric blue accents,
+high-contrast data, restrained color semantics (only status colors
+deviate from the blue/neutral base).
+
+2. COLOR SYSTEM
+-----------------------------------------------------------------
+All colors are defined as semantic OKLCH tokens in src/styles.css.
+Components never hardcode colors.
+
+SURFACES
+  --background        oklch(0.02 0 0)          Pure black page canvas
+  --surface / --card  oklch(0.10 0.012 255)    Panel / card surface
+  --elevated / popover oklch(0.14–0.16 0.02 255) Drawers, dropdowns
+  --sidebar           oklch(0.07 0.01 255)     Slightly lifted sidebar
+  --border / --input  oklch(0.24 0.03 250)     Hairline borders (blue-tinted)
+
+BRAND / INTERACTIVE — ELECTRIC BLUE (#00A6FF family)
+  --primary           oklch(0.68 0.18 240)     Electric blue: buttons,
+                                               active states, chart series,
+                                               links, focus
+  --primary-hover     oklch(0.60 0.20 245)
+  --primary-foreground oklch(0.02 0 0)         Black text on blue buttons
+  --accent            oklch(0.18 0.05 245)     Blue-tinted hover/selected fill
+  --accent-foreground oklch(0.85 0.12 240)     Light blue text on accent
+  --ring              = primary                Focus rings
+
+TEXT
+  --foreground        oklch(0.96 0.005 250)    Primary text
+  --muted-foreground  oklch(0.70 0.03 245)     Secondary text
+  --subtle            oklch(0.55 0.03 250)     Tertiary / metadata text
+
+STATUS SEMANTICS
+  --success           oklch(0.75 0.16 165)     Emerald — recovered
+  --warning           oklch(0.80 0.16 75)      Amber — escalated / test mode
+  --destructive       oklch(0.65 0.22 25)      Red — stopped / kill switch
+  Each status badge uses a 12%-alpha tinted background of its color
+  with the full-strength color for text and dot.
+
+CHARTS
+  --chart-1  Electric blue (Revyn series / progress bars)
+  --chart-2  Emerald (success comparisons)
+  --chart-3  Amber
+  --chart-4  Red
+  --chart-5  Neutral grey (baseline series)
+
+3. TYPOGRAPHY
+-----------------------------------------------------------------
+  UI font:      Inter (loaded via Google Fonts <link> in __root.tsx)
+  Numeric font: JetBrains Mono — all amounts, IDs, confidence
+                scores, timestamps, table numbers (tabular-nums)
+  Scale:
+    Page title        20px / 600
+    Panel titles      14px / 600
+    Body / table      13–14px / 400
+    Metric values     28px / 700 mono
+    Labels / metadata 11–12px / 500, uppercase for table headers
+
+4. SPACING & LAYOUT
+-----------------------------------------------------------------
+  Base radius: 0.75rem (--radius); cards use radius-xl.
+  Sidebar: fixed 260px on desktop (lg+), off-canvas overlay below.
+  Top bar: sticky, 64px, blurred black background, contains page
+  title, batch subtitle, TEST MODE chip, Run Batch button, user chip.
+  Content: max-width 1400px, 24px horizontal padding, 24px gaps.
+  Panels: 1px --border hairline, --shadow-card
+    (0 1px 2px black/40%, 0 8px 24px -12px black/60%).
+  Tables: px-6 py-3.5 cells, hairline row dividers, horizontal
+  scroll (scroll-slim thin scrollbars) on overflow.
+
+DIV HIERARCHY (every page)
+  <AppShell>
+    <aside>  sidebar (logo block, OPERATIONS nav, kill-switch card)
+    <div lg:pl-[260px]>
+      <header> sticky top bar
+      <main mx-auto max-w-[1400px] px-6>
+        page content (metrics grid → panels → tables)
+
+5. SCREENS
+-----------------------------------------------------------------
+DASHBOARD (/)
+  - 4 metric cards in a responsive grid (1/2/4 columns):
+    Total at Risk, Recovered, Recovery Rate, Pending Action.
+    Each: uppercase label, large mono value, icon in tinted chip,
+    delta line in status color.
+  - "Recovery rate vs naïve retry" panel: paired bar chart,
+    electric blue (Revyn) vs grey (baseline), 7 days.
+  - "Root cause distribution" panel: 6 causes with value,
+    case counts and electric-blue progress bars.
+  - "Recent recoveries" table: Payment ID, Customer, Amount,
+    Root cause, Action tag, Status badge, Updated (mono).
+
+RECOVERIES (/recoveries)
+  - Filter bar: search input (ID/customer/root cause) + status
+    pill filters (All / Recovered / In progress / Pending /
+    Escalated / Stopped). Active pill = electric blue outline.
+  - Dense case table: Payment ID, Customer (+phone), Amount,
+    Method, Root cause (+confidence), Attempts n/3, Action.
+  - Clicking a row opens a right-side detail drawer
+    (elevated surface, --shadow-panel): diagnosis with confidence
+    meter, policy decision trace, next action, full audit
+    timeline for that case.
+
+AUDIT TRAIL (/audit)
+  - Search + stage filter (diagnose / decide / act / verify / measure).
+  - Expandable rows: each expands to a 5-stage vertical timeline
+    with stage dot, timestamp (mono, UTC) and detail text,
+    plus the hash-chain fragment proving tamper-evidence.
+
+SETTINGS (/settings)
+  - Read-only policy rule cards (max retries 3, mandate hard stop,
+    economic floor, salary-window retries, message limits,
+    LLM = diagnosis only, human escalation).
+  - Connection health panel (gateway, WhatsApp, LLM statuses).
+  - Safety envelope + interactive Kill Switch control
+    (destructive red; armed state halts all outbound actions).
+
+6. COMPONENT ANATOMY
+-----------------------------------------------------------------
+Panel         header (title + description + optional action) + body
+MetricCard    label / value / delta / icon chip
+StatusBadge   dot + label, tinted bg per status color
+Tag           outlined pill for actions (electric blue)
+RunBatchBtn   primary electric-blue button with play icon
+TestModeChip  amber outlined pill, always visible in top bar
+KillSwitch    red-bordered card, bottom of sidebar + Settings
+EmptyState    centered icon + message inside panels
+
+7. UX RULES
+-----------------------------------------------------------------
+- Explainability first: every automated action shows its diagnosis,
+  confidence score and policy trace. No "black box" outcomes.
+- Safety is always visible: TEST MODE chip in the top bar at all
+  times; kill-switch status pinned in the sidebar.
+- Numbers use tabular-nums so columns never jitter.
+- Timestamps are rendered in UTC ("03 Sept, 12:00") to stay
+  consistent between server and client rendering.
+- Filters are instant, client-side, and combinable (search + status).
+- Row hover = subtle --accent tint; drawers close on overlay
+  click and Escape.
+- All interactive elements have electric-blue focus rings.
+
+8. ACCESSIBILITY & RESPONSIVENESS
+-----------------------------------------------------------------
+- Contrast: foreground on background ≈ 15:1; status colors chosen
+  to pass AA on their tinted backgrounds.
+- color-scheme: dark; thin styled scrollbars.
+- Breakpoints: sidebar collapses below lg (1024px) to a hamburger
+  overlay; metric grid 4 → 2 → 1 columns; tables scroll
+  horizontally rather than wrapping.
+
+9. FILE MAP (UI ONLY — MOCK DATA, NO BACKEND)
+-----------------------------------------------------------------
+  src/styles.css                 design tokens + utilities (panel, num, scroll-slim)
+  src/lib/mock-data.ts           48 deterministic cases, metrics,
+                                 trends, policies, audit entries,
+                                 INR / UTC time formatters
+  src/components/app-shell.tsx   sidebar, top bar, test-mode chip,
+                                 run-batch button, kill-switch card
+  src/components/primitives.tsx  Panel, MetricCard, StatusBadge,
+                                 Tag, EmptyState
+  src/routes/index.tsx           Dashboard
+  src/routes/recoveries.tsx      Recovery workspace + case drawer
+  src/routes/audit.tsx           Audit trail
+  src/routes/settings.tsx        Policies, connections, kill switch
+  src/routes/__root.tsx          fonts, metadata, outlet
+=================================================================

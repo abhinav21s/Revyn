@@ -1,8 +1,24 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { KillSwitchControl } from "@/components/kill-switch";
-import { CheckCircle2, Info, AlertTriangle } from "lucide-react";
+import { Panel } from "@/components/primitives";
+import {
+  ShieldAlert,
+  ShieldCheck,
+  CheckCircle2,
+  AlertTriangle,
+  RotateCcw,
+  Ban,
+  TrendingDown,
+  Calendar,
+  MessageSquare,
+  Cpu,
+  UserCheck,
+  Power,
+  CreditCard,
+  Database,
+  RefreshCw,
+} from "lucide-react";
 
 export default function SettingsPage() {
   const [connections, setConnections] = useState({
@@ -12,6 +28,8 @@ export default function SettingsPage() {
   });
   const [killSwitchActive, setKillSwitchActive] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [confirmKill, setConfirmKill] = useState(false);
+  const [toggling, setToggling] = useState(false);
 
   useEffect(() => {
     fetchSettings();
@@ -33,161 +51,290 @@ export default function SettingsPage() {
     }
   };
 
+  const toggleKillSwitch = async () => {
+    setToggling(true);
+    const targetState = !killSwitchActive;
+    try {
+      const res = await fetch("/api/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          key: "kill_switch",
+          value: targetState ? "true" : "false",
+        }),
+      });
+      if (res.ok) {
+        setKillSwitchActive(targetState);
+      }
+    } finally {
+      setToggling(false);
+      setConfirmKill(false);
+    }
+  };
+
   const policyRules = [
     {
+      icon: RotateCcw,
       title: "Max Retry Limit",
       value: "3 attempts",
-      desc: "Any case reaching 3 retries is immediately escalated to human review to prevent customer fatigue and compliance issues.",
+      desc: "Strict ceiling on automatic retry attempts per invoice to prevent card network fatigue and merchant compliance sanctions.",
     },
     {
+      icon: Ban,
+      title: "Mandate Hard Stop",
+      value: "RBI Mandate Block",
+      desc: "Revoked or cancelled e-mandates are instantly marked unrecoverable. Zero automated retries allowed under RBI guidelines.",
+    },
+    {
+      icon: TrendingDown,
       title: "Economic Floor",
       value: "₹10.00 minimum",
-      desc: "Payments below the floor are marked unrecoverable to ensure recovery costs never exceed the recovered value.",
+      desc: "Payments under the floor are excluded from recovery loops to ensure unit economics remain strictly positive.",
     },
     {
-      title: "Mandate Hard Stop",
-      value: "Revoked / Expired",
-      desc: "Cancelled or expired UPI AutoPay mandates are never automatically retried, in compliance with RBI guidelines.",
+      icon: Calendar,
+      title: "Salary Window Retries",
+      value: "Days 1–5 (2h loop)",
+      desc: "Insufficient balance failures occurring during month-turn salary windows use rapid 2-hour retry cycles instead of 24 hours.",
     },
     {
-      title: "Salary Day Window",
-      value: "Days 1–5 of month",
-      desc: "Insufficient balance cases in salary periods use a rapid 2-hour retry window instead of the standard 24-hour delay.",
+      icon: MessageSquare,
+      title: "Message Limits & Anti-Spam",
+      value: "1 link per case",
+      desc: "Customers receive at most one recovery payment link per failure episode. No repetitive messaging or duplicate links.",
+    },
+    {
+      icon: Cpu,
+      title: "LLM = Diagnosis Only",
+      value: "Zero Financial Authority",
+      desc: "Groq Llama 3.3 70B output is strictly constrained to root-cause classification schema. Zero authority to authorize funds.",
+    },
+    {
+      icon: UserCheck,
+      title: "Human Escalation Policy",
+      value: "Tier-2 Review",
+      desc: "Unknown errors, mandate disputes, and cases reaching maximum attempts are auto-routed to merchant operators.",
     },
   ];
 
   return (
     <div className="space-y-6">
-      {/* ── Title block: H1 28px/700 mb-2, Subtext 14px mb-8 (32px air before first card) ── */}
-      <div className="mb-8">
-        <h1 className="text-[28px] font-bold text-[#F4F6FA] tracking-[-0.02em] leading-tight mb-2">
-          Settings & Safety Guardrails
-        </h1>
-        <p className="text-[14px] text-[#94A3B8] leading-[1.5]">
-          Configure safety parameters, emergency kill switch, and view API integration health.
-        </p>
-      </div>
-
-      {/* ── CARD 1: Emergency Kill Switch (own card, padding: 24px, mb-6) ── */}
-      <KillSwitchControl
-        initialActive={killSwitchActive}
-        onStateChanged={(val) => setKillSwitchActive(val)}
-      />
-
-      {/* ── CARD 2: Deterministic Policy Engine Rules (padding: 24px, mb-6) ── */}
-      <div className="p-6 rounded-[12px] bg-[#121826] border border-[rgba(38,48,69,0.3)] shadow-sm">
-        {/* Header: title + "TypeScript · Deterministic" tag pill on same row, mb-2 */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
-          <h3 className="text-[16px] font-semibold text-[#F4F6FA] tracking-tight">
-            Deterministic Policy Engine Rules
-          </h3>
-          <span className="self-start sm:self-auto text-[11px] font-mono font-medium px-2.5 py-1 rounded-[6px] bg-[#1A2233] text-[#4F7CFF] border border-[#2E3A52]">
-            TypeScript · Deterministic
-          </span>
-        </div>
-
-        {/* Subtext: 14px --text-secondary, mb-6 */}
-        <p className="text-[14px] text-[#94A3B8] leading-[1.5] mb-6">
-          Bounded execution: Groq LLM has zero authority over financial actions. All retries, payment links, and escalations are enforced by deterministic rules:
-        </p>
-
-        {/* 2x2 Grid (16px gap, single column on mobile) */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {policyRules.map((rule) => (
+      {/* ── 1. Global Emergency Kill Switch Card ── */}
+      <div
+        className={`p-6 rounded-2xl border transition-all shadow-xl shadow-black/40 ${
+          killSwitchActive
+            ? "bg-red-950/20 border-red-500/50 shadow-red-950/20"
+            : "bg-[#0F1523] border-[#1C273E]"
+        }`}
+      >
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          <div className="flex items-start gap-4">
             <div
-              key={rule.title}
-              className="p-4 rounded-[8px] bg-[#0B0F19] border border-[rgba(38,48,69,0.3)] flex flex-col justify-between"
+              className={`w-12 h-12 rounded-2xl border flex items-center justify-center shrink-0 shadow-md ${
+                killSwitchActive
+                  ? "bg-red-500/20 border-red-500/40 text-red-400"
+                  : "bg-emerald-500/15 border-emerald-500/30 text-emerald-400"
+              }`}
             >
-              <div>
-                <div className="text-[13px] text-[#94A3B8] font-medium mb-1">
-                  {rule.title}
-                </div>
-                <div className="text-[20px] font-bold text-[#F4F6FA] font-mono mb-2">
-                  {rule.value}
-                </div>
-              </div>
-              <p className="text-[12px] text-[#5B6B85] leading-[1.5]">
-                {rule.desc}
-              </p>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* ── CARD 3: Gateway & AI Integration Health (padding: 24px, mb-6) ── */}
-      <div className="p-6 rounded-[12px] bg-[#121826] border border-[rgba(38,48,69,0.3)] shadow-sm">
-        {/* Header: title + "Live connection status..." subtext, mb-5 */}
-        <div className="mb-5">
-          <h3 className="text-[16px] font-semibold text-[#F4F6FA] tracking-tight mb-1">
-            Gateway & AI Integration Health
-          </h3>
-          <p className="text-[13px] text-[#94A3B8]">
-            Live connection status for external systems and execution sandbox
-          </p>
-        </div>
-
-        {/* 3-column Grid (16px gap, single column on mobile) */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* Razorpay */}
-          <div className="p-4 rounded-[8px] bg-[#0B0F19] border border-[rgba(38,48,69,0.3)] flex flex-col justify-between">
-            {/* Row 1: Name (14px/600) + Status pill space-between */}
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-[14px] font-semibold text-[#F4F6FA]">Razorpay</span>
-              {connections.razorpay ? (
-                <span className="text-[11px] font-medium text-[#22C55E] bg-[rgba(34,197,94,0.1)] border border-[rgba(34,197,94,0.25)] px-2.5 py-0.5 rounded-full flex items-center gap-1">
-                  <CheckCircle2 className="w-3 h-3" /> Ready
-                </span>
+              {killSwitchActive ? (
+                <ShieldAlert className="w-6 h-6 animate-pulse" />
               ) : (
-                <span className="text-[11px] font-medium text-[#F59E0B] bg-[rgba(245,158,11,0.1)] border border-[rgba(245,158,11,0.25)] px-2.5 py-0.5 rounded-full flex items-center gap-1">
-                  <Info className="w-3 h-3" /> Test Mode
-                </span>
+                <ShieldCheck className="w-6 h-6" />
               )}
             </div>
-            {/* Row 2 (mt-2): description 12px, --text-muted, line-height: 1.5 */}
-            <p className="text-[12px] text-[#5B6B85] leading-[1.5] mt-2">
-              Official SDK connected with test mode credentials (<code className="text-[#94A3B8] font-mono">rzp_test_*</code>). No live card charges.
+
+            <div>
+              <div className="flex items-center gap-3 flex-wrap">
+                <h3 className="text-[17px] font-bold tracking-tight text-[#F8FAFC]">
+                  Global Emergency Kill Switch
+                </h3>
+                <span
+                  className={`px-3 py-0.5 rounded-full text-[11px] font-mono font-bold border ${
+                    killSwitchActive
+                      ? "bg-red-500/20 text-red-400 border-red-500/40"
+                      : "bg-emerald-500/12 text-emerald-400 border-emerald-500/30"
+                  }`}
+                >
+                  {killSwitchActive ? "ARMED — OPERATIONS HALTED" : "SYSTEM ARMED & SECURE"}
+                </span>
+              </div>
+
+              <p className="text-[13px] text-[#94A3B8] leading-relaxed mt-1.5 max-w-2xl">
+                Immediately halts all autonomous recovery actions, pauses payment link generation via Razorpay,
+                and freezes the batch pipeline. Ingested failures are parked safely with status{" "}
+                <code className="text-red-400 font-mono font-bold">HALTED</code>.
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={() => setConfirmKill(true)}
+            disabled={loading || toggling}
+            className={`px-6 py-3 rounded-xl text-[13px] font-bold flex items-center justify-center gap-2 whitespace-nowrap transition-all shadow-lg active:scale-95 disabled:opacity-60 shrink-0 ${
+              killSwitchActive
+                ? "bg-emerald-500 hover:bg-emerald-400 text-black shadow-emerald-500/20"
+                : "bg-red-600 hover:bg-red-500 text-white shadow-red-600/30"
+            }`}
+          >
+            {toggling ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Power className="w-4 h-4" />}
+            <span>{killSwitchActive ? "Resume Autonomous Actions" : "Activate Kill Switch"}</span>
+          </button>
+        </div>
+      </div>
+
+      {/* ── 2. Bounded Policy Engine Guardrails ── */}
+      <Panel
+        title="Deterministic Policy Engine Guardrails"
+        description="Bounded execution: Groq LLM has zero authority over financial actions. All retries, links, and escalations are strictly governed by deterministic rules."
+        action={
+          <span className="text-[11px] font-mono font-semibold px-3 py-1 rounded-lg bg-[#0084FF]/12 text-[#38BDF8] border border-[#0084FF]/30">
+            TypeScript · Deterministic
+          </span>
+        }
+      >
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {policyRules.map((rule) => {
+            const Icon = rule.icon;
+            return (
+              <div
+                key={rule.title}
+                className="p-4.5 rounded-xl border border-[#1C273E] bg-[#090D17] flex flex-col justify-between hover:border-[#0084FF]/40 transition-colors group"
+              >
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <Icon className="w-4 h-4 text-[#0084FF]" />
+                    <span className="text-[13px] font-bold text-[#F8FAFC]">
+                      {rule.title}
+                    </span>
+                  </div>
+
+                  <div className="text-[19px] font-black font-mono tracking-tight text-[#0084FF] mb-2">
+                    {rule.value}
+                  </div>
+                </div>
+
+                <p className="text-[12px] text-[#94A3B8] leading-relaxed">
+                  {rule.desc}
+                </p>
+              </div>
+            );
+          })}
+        </div>
+      </Panel>
+
+      {/* ── 3. Gateway & AI Integration Health ── */}
+      <Panel
+        title="Gateway & AI Integration Health"
+        description="Live connection status for external systems and execution sandbox"
+      >
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {/* Razorpay */}
+          <div className="p-4.5 rounded-xl border border-[#1C273E] bg-[#090D17] flex flex-col justify-between">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <CreditCard className="w-4 h-4 text-[#0084FF]" />
+                <span className="text-[14px] font-bold text-[#F8FAFC]">Razorpay Gateway</span>
+              </div>
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-500/12 text-amber-400 border border-amber-500/30">
+                TEST MODE
+              </span>
+            </div>
+            <p className="text-[12px] text-[#94A3B8] leading-relaxed mt-1">
+              Official SDK connected with test mode credentials (<code className="text-[#F8FAFC] font-mono">rzp_test_*</code>). No live card charges.
             </p>
           </div>
 
           {/* Groq AI */}
-          <div className="p-4 rounded-[8px] bg-[#0B0F19] border border-[rgba(38,48,69,0.3)] flex flex-col justify-between">
+          <div className="p-4.5 rounded-xl border border-[#1C273E] bg-[#090D17] flex flex-col justify-between">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-[14px] font-semibold text-[#F4F6FA]">Groq AI</span>
+              <div className="flex items-center gap-2">
+                <Cpu className="w-4 h-4 text-[#0084FF]" />
+                <span className="text-[14px] font-bold text-[#F8FAFC]">Groq AI (Llama 3.3 70B)</span>
+              </div>
               {connections.groq ? (
-                <span className="text-[11px] font-medium text-[#22C55E] bg-[rgba(34,197,94,0.1)] border border-[rgba(34,197,94,0.25)] px-2.5 py-0.5 rounded-full flex items-center gap-1">
-                  <CheckCircle2 className="w-3 h-3" /> Connected
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/12 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
+                  <CheckCircle2 className="w-3 h-3" /> Ready
                 </span>
               ) : (
-                <span className="text-[11px] font-medium text-[#EF4444] bg-[rgba(239,68,68,0.1)] border border-[rgba(239,68,68,0.25)] px-2.5 py-0.5 rounded-full flex items-center gap-1">
-                  <AlertTriangle className="w-3 h-3" /> Needs Key
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-500/12 text-amber-400 border border-amber-500/30">
+                  Fallback Mode
                 </span>
               )}
             </div>
-            <p className="text-[12px] text-[#5B6B85] leading-[1.5] mt-2">
-              Llama 3.3 70B Versatile isolated to classification with strict JSON Schema output.
+            <p className="text-[12px] text-[#94A3B8] leading-relaxed mt-1">
+              Isolated to JSON-schema root-cause classification with zero financial execution privileges.
             </p>
           </div>
 
           {/* Supabase */}
-          <div className="p-4 rounded-[8px] bg-[#0B0F19] border border-[rgba(38,48,69,0.3)] flex flex-col justify-between">
+          <div className="p-4.5 rounded-xl border border-[#1C273E] bg-[#090D17] flex flex-col justify-between">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-[14px] font-semibold text-[#F4F6FA]">Supabase</span>
-              {connections.supabase ? (
-                <span className="text-[11px] font-medium text-[#22C55E] bg-[rgba(34,197,94,0.1)] border border-[rgba(34,197,94,0.25)] px-2.5 py-0.5 rounded-full flex items-center gap-1">
-                  <CheckCircle2 className="w-3 h-3" /> Connected
-                </span>
-              ) : (
-                <span className="text-[11px] font-medium text-[#EF4444] bg-[rgba(239,68,68,0.1)] border border-[rgba(239,68,68,0.25)] px-2.5 py-0.5 rounded-full flex items-center gap-1">
-                  <AlertTriangle className="w-3 h-3" /> Needs Key
-                </span>
-              )}
+              <div className="flex items-center gap-2">
+                <Database className="w-4 h-4 text-[#0084FF]" />
+                <span className="text-[14px] font-bold text-[#F8FAFC]">Supabase Ledger</span>
+              </div>
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/12 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
+                <CheckCircle2 className="w-3 h-3" /> Connected
+              </span>
             </div>
-            <p className="text-[12px] text-[#5B6B85] leading-[1.5] mt-2">
+            <p className="text-[12px] text-[#94A3B8] leading-relaxed mt-1">
               PostgreSQL database managing case status, rate metrics, and immutable audit logs.
             </p>
           </div>
         </div>
-      </div>
+      </Panel>
+
+      {/* Confirmation Modal */}
+      {confirmKill && (
+        <div
+          className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={() => setConfirmKill(false)}
+        >
+          <div
+            className="w-full max-w-md rounded-2xl bg-[#0F1523] border border-[#1C273E] p-6 space-y-4 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-3">
+              <div
+                className={`w-11 h-11 rounded-xl flex items-center justify-center border shrink-0 ${
+                  killSwitchActive
+                    ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-400"
+                    : "bg-red-500/15 border-red-500/30 text-red-400"
+                }`}
+              >
+                <AlertTriangle className="w-6 h-6" />
+              </div>
+              <div>
+                <h4 className="text-[16px] font-bold text-[#F8FAFC]">
+                  {killSwitchActive ? "Resume Autonomous Operations?" : "Activate Emergency Kill Switch?"}
+                </h4>
+                <p className="text-[12px] text-[#94A3B8] mt-0.5">
+                  {killSwitchActive
+                    ? "This will resume the policy engine and allow recovery link creation in Razorpay Test Mode."
+                    : "This immediately stops all Revyn automated recovery actions. No links will be generated until deactivated."}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex gap-2.5 pt-2">
+              <button
+                onClick={() => setConfirmKill(false)}
+                className="flex-1 py-2.5 rounded-xl bg-[#141C2E] hover:bg-[#18233A] text-[13px] font-medium text-[#94A3B8] transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={toggleKillSwitch}
+                className={`flex-1 py-2.5 rounded-xl text-[13px] font-bold text-white transition-colors ${
+                  killSwitchActive ? "bg-emerald-600 hover:bg-emerald-500" : "bg-red-600 hover:bg-red-500"
+                }`}
+              >
+                {killSwitchActive ? "Yes, Resume" : "Yes, Halt Operations"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

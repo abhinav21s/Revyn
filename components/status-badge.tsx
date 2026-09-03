@@ -1,57 +1,53 @@
 import React from "react";
 import type { CaseStatus, RootCause, PolicyAction } from "@/lib/types";
 
-export function StatusBadge({ status }: { status: CaseStatus }) {
-  switch (status) {
-    case "recovered":
-      return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[6px] text-[12px] font-medium bg-[rgba(34,197,94,0.1)] text-[#22C55E] border border-[rgba(34,197,94,0.25)] shrink-0">
-          <span className="w-1.5 h-1.5 rounded-full bg-[#22C55E]" />
-          Recovered
-        </span>
-      );
-    case "in_progress":
-      return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[6px] text-[12px] font-medium bg-[rgba(245,158,11,0.1)] text-[#F59E0B] border border-[rgba(245,158,11,0.25)] shrink-0">
-          <span className="w-1.5 h-1.5 rounded-full bg-[#F59E0B] animate-pulse" />
-          In Progress
-        </span>
-      );
-    case "pending":
-      return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[6px] text-[12px] font-medium bg-[rgba(245,158,11,0.1)] text-[#F59E0B] border border-[rgba(245,158,11,0.25)] shrink-0">
-          <span className="w-1.5 h-1.5 rounded-full bg-[#F59E0B]" />
-          Pending
-        </span>
-      );
-    case "escalated":
-      return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[6px] text-[12px] font-medium bg-[rgba(239,68,68,0.1)] text-[#EF4444] border border-[rgba(239,68,68,0.25)] shrink-0">
-          <span className="w-1.5 h-1.5 rounded-full bg-[#EF4444]" />
-          Escalated
-        </span>
-      );
-    case "unrecoverable":
-      return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[6px] text-[12px] font-medium bg-[rgba(100,116,139,0.1)] text-[#64748B] border border-[rgba(100,116,139,0.25)] shrink-0">
-          <span className="w-1.5 h-1.5 rounded-full bg-[#64748B]" />
-          Unrecoverable
-        </span>
-      );
-    case "halted":
-      return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[6px] text-[12px] font-medium bg-[rgba(239,68,68,0.1)] text-[#EF4444] border border-[rgba(239,68,68,0.25)] shrink-0">
-          <span className="w-1.5 h-1.5 rounded-full bg-[#EF4444]" />
-          Halted
-        </span>
-      );
-    default:
-      return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[6px] text-[12px] font-medium bg-[#1A2233] text-[#94A3B8] border border-[#2E3A52] shrink-0">
-          {status}
-        </span>
-      );
+export function StatusBadge({ status }: { status: CaseStatus | string }) {
+  const s = status.toLowerCase();
+
+  let color = "var(--muted-foreground)";
+  let bg = "rgba(122, 149, 184, 0.12)";
+  let border = "rgba(122, 149, 184, 0.25)";
+  let label = status;
+
+  if (s === "recovered" || s === "resolved") {
+    color = "var(--success)";
+    bg = "var(--success-bg)";
+    border = "rgba(16, 185, 129, 0.28)";
+    label = "Recovered";
+  } else if (s === "in_progress" || s === "in progress") {
+    color = "var(--primary)";
+    bg = "rgba(0, 166, 255, 0.12)";
+    border = "rgba(0, 166, 255, 0.3)";
+    label = "In Progress";
+  } else if (s === "pending") {
+    color = "var(--warning)";
+    bg = "var(--warning-bg)";
+    border = "rgba(245, 158, 11, 0.3)";
+    label = "Pending";
+  } else if (s === "escalated") {
+    color = "var(--warning)";
+    bg = "var(--warning-bg)";
+    border = "rgba(245, 158, 11, 0.3)";
+    label = "Escalated";
+  } else if (s === "unrecoverable" || s === "stopped" || s === "halted") {
+    color = "var(--destructive)";
+    bg = "var(--destructive-bg)";
+    border = "rgba(239, 68, 68, 0.3)";
+    label = s === "halted" ? "Halted" : "Stopped";
   }
+
+  return (
+    <span
+      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border shrink-0"
+      style={{ background: bg, color: color, borderColor: border }}
+    >
+      <span
+        className="w-1.5 h-1.5 rounded-full shrink-0"
+        style={{ background: color }}
+      />
+      <span>{label}</span>
+    </span>
+  );
 }
 
 export function RootCauseBadge({
@@ -63,7 +59,7 @@ export function RootCauseBadge({
 }) {
   if (!cause) {
     return (
-      <span className="text-[12px] text-[#5B6B85] font-mono">
+      <span className="text-[12px] font-mono" style={{ color: "var(--subtle)" }}>
         unclassified
       </span>
     );
@@ -73,14 +69,25 @@ export function RootCauseBadge({
 
   return (
     <div className="inline-flex items-center gap-1.5 flex-wrap">
-      {/* Root Cause pill: padding: 3px 10px, border-radius: 6px, bg: #0B0F19, border: #2E3A52, monospace, font-size: 11px */}
-      <span className="px-[10px] py-[3px] rounded-[6px] bg-[#0B0F19] border border-[#2E3A52] text-[11px] font-mono text-[#F4F6FA] shrink-0">
+      <span
+        className="px-2.5 py-0.5 rounded-[6px] text-[11px] font-mono border"
+        style={{
+          background: "var(--background)",
+          color: "var(--foreground)",
+          borderColor: "var(--border)",
+        }}
+      >
         {cause}
       </span>
       {isLLM && (
         <span
           title="Diagnosed via Groq Llama 3.3 70B"
-          className="px-1.5 py-[2px] rounded-[4px] text-[10px] font-medium bg-[rgba(79,124,255,0.15)] text-[#4F7CFF] border border-[rgba(79,124,255,0.3)] shrink-0"
+          className="px-1.5 py-[1px] rounded-[4px] text-[10px] font-medium border"
+          style={{
+            background: "rgba(0, 166, 255, 0.12)",
+            color: "var(--primary)",
+            borderColor: "rgba(0, 166, 255, 0.3)",
+          }}
         >
           Groq AI
         </span>
@@ -89,41 +96,26 @@ export function RootCauseBadge({
   );
 }
 
-export function ActionBadge({ action }: { action?: PolicyAction }) {
+export function ActionTag({ action }: { action?: PolicyAction | string }) {
   if (!action) return null;
 
-  switch (action) {
-    case "smart_retry":
-      return (
-        <span className="text-[12px] font-medium text-[#4F7CFF]">
-          Smart Retry
-        </span>
-      );
-    case "send_payment_link":
-      return (
-        <span className="text-[12px] font-medium text-[#22C55E]">
-          Razorpay Link
-        </span>
-      );
-    case "escalate_to_human":
-      return (
-        <span className="text-[12px] font-medium text-[#EF4444]">
-          Escalate
-        </span>
-      );
-    case "mark_unrecoverable":
-      return (
-        <span className="text-[12px] font-medium text-[#64748B]">
-          Hard Stop
-        </span>
-      );
-    case "halt_kill_switch":
-      return (
-        <span className="text-[12px] font-medium text-[#EF4444]">
-          Kill Switch
-        </span>
-      );
-    default:
-      return <span className="text-[12px] text-[#94A3B8]">{action}</span>;
-  }
+  let label = String(action);
+  if (action === "smart_retry") label = "Smart Retry";
+  else if (action === "send_payment_link") label = "Razorpay Link";
+  else if (action === "escalate_to_human") label = "Escalate";
+  else if (action === "mark_unrecoverable") label = "Hard Stop";
+  else if (action === "halt_kill_switch") label = "Kill Switch";
+
+  return (
+    <span
+      className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-medium border font-mono shrink-0"
+      style={{
+        background: "rgba(0, 166, 255, 0.08)",
+        color: "var(--primary)",
+        borderColor: "rgba(0, 166, 255, 0.35)",
+      }}
+    >
+      {label}
+    </span>
+  );
 }

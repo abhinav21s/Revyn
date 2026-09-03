@@ -1,20 +1,43 @@
-import React from "react";
-import { Header } from "@/components/header";
+"use client";
+
+import React, { useState } from "react";
+import { Sidebar } from "@/components/sidebar";
+import { TopBar } from "@/components/topbar";
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return (
-    <div className="min-h-screen bg-[#0B0F19] text-[#F4F6FA] flex flex-col">
-      {/* 2-Row Fintech Header (Row 1: 64px, Row 2: 44px) */}
-      <Header />
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
-      {/* Centered Page Container (max-width: 1280px, centered, 32px desktop padding, 16px mobile) */}
-      <main className="flex-1 w-full max-w-[1280px] mx-auto px-4 md:px-8 pt-10 pb-12">
-        {children}
-      </main>
+  return (
+    <div className="min-h-screen flex bg-[#06080F] text-[#F8FAFC]">
+      {/* Desktop Sidebar: normal flex sibling (sticky top-0 h-screen, exactly 260px) */}
+      <aside className="hidden md:flex w-[260px] shrink-0 border-r border-[#1C273E] bg-[#090D17] sticky top-0 h-screen flex-col z-30">
+        <Sidebar />
+      </aside>
+
+      {/* Mobile Drawer (<md) */}
+      {mobileSidebarOpen && (
+        <div className="md:hidden fixed inset-0 z-50 flex">
+          <div
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm"
+            onClick={() => setMobileSidebarOpen(false)}
+          />
+          <div className="relative z-10 w-[260px] h-full shadow-2xl bg-[#090D17]">
+            <Sidebar onClose={() => setMobileSidebarOpen(false)} />
+          </div>
+        </div>
+      )}
+
+      {/* Main Content Area: flex-1 min-w-0, completely unblocked */}
+      <div className="flex-1 flex flex-col min-w-0">
+        <TopBar onToggleSidebar={() => setMobileSidebarOpen(true)} />
+        <main className="flex-1 px-4 sm:px-8 py-8 max-w-[1440px] w-full mx-auto">
+          {children}
+        </main>
+      </div>
     </div>
   );
 }

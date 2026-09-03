@@ -6,189 +6,196 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
-  Layers,
-  FileSpreadsheet,
+  RefreshCw,
+  ClipboardList,
   Settings,
   ShieldAlert,
-  CheckCircle2,
-  Menu,
-  X,
+  Power,
+  AlertTriangle,
 } from "lucide-react";
 
+const NAV_ITEMS = [
+  { name: "Dashboard", href: "/", icon: LayoutDashboard },
+  { name: "Recoveries", href: "/recoveries", icon: RefreshCw },
+  { name: "Audit Trail", href: "/audit", icon: ClipboardList },
+  { name: "Settings & Safety", href: "/settings", icon: Settings },
+];
+
 interface SidebarProps {
-  killSwitchActive?: boolean;
+  onClose?: () => void;
 }
 
-// Clean "R" monogram logo as SVG (30x30)
-function RevynLogo() {
-  return (
-    <svg
-      width="30"
-      height="30"
-      viewBox="0 0 36 36"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      className="shrink-0"
-    >
-      <rect width="36" height="36" rx="10" fill="url(#revyn-gradient)" />
-      <path
-        d="M10 26V10H20C22.2 10 24 11.8 24 14C24 15.8 22.9 17.3 21.4 17.9L25 26H21.5L18.3 18H13.5V26H10Z"
-        fill="white"
-        fillOpacity="0.95"
-      />
-      <path
-        d="M13.5 14.5H19.5C20.3 14.5 21 15.2 21 16C21 16.8 20.3 17.5 19.5 17.5H13.5V14.5Z"
-        fill="url(#revyn-gradient)"
-      />
-      <defs>
-        <linearGradient
-          id="revyn-gradient"
-          x1="0"
-          y1="0"
-          x2="36"
-          y2="36"
-          gradientUnits="userSpaceOnUse"
-        >
-          <stop stopColor="#3B82F6" />
-          <stop offset="0.5" stopColor="#6366F1" />
-          <stop offset="1" stopColor="#10B981" />
-        </linearGradient>
-      </defs>
-    </svg>
-  );
-}
-
-export function Sidebar({ killSwitchActive = false }: SidebarProps) {
+export function Sidebar({ onClose }: SidebarProps) {
   const pathname = usePathname();
-  const [mobileOpen, setMobileOpen] = useState(false);
+  const [killActive, setKillActive] = useState(false);
+  const [confirmKill, setConfirmKill] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  // Close on route change
   useEffect(() => {
-    setMobileOpen(false);
-  }, [pathname]);
+    fetch("/api/settings")
+      .then((r) => r.json())
+      .then((d) => setKillActive(d.settings?.kill_switch === "true"))
+      .catch(() => {});
+  }, []);
 
-  const navigation = [
-    { name: "Dashboard", href: "/", icon: LayoutDashboard },
-    { name: "Recoveries", href: "/recoveries", icon: Layers },
-    { name: "Audit Trail", href: "/audit", icon: FileSpreadsheet },
-    { name: "Settings & Safety", href: "/settings", icon: Settings },
-  ];
+  const toggleKill = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key: "kill_switch", value: killActive ? "false" : "true" }),
+      });
+      if (res.ok) setKillActive(!killActive);
+    } finally {
+      setLoading(false);
+      setConfirmKill(false);
+    }
+  };
 
-  const SidebarContent = () => (
-    <div className="flex flex-col h-full">
-      {/* ── Logo & Brand ─────────────────────────────────────── */}
-      <div className="px-5 py-4 border-b border-[#374151]/60">
-        <div className="flex items-center gap-3">
-          <RevynLogo />
+  return (
+    <div className="flex flex-col h-full bg-[#090D17] text-[#F8FAFC]">
+      {/* ── Logo Block ── */}
+      <div className="p-6 border-b border-[#1C273E]">
+        <Link href="/" className="flex items-center gap-3 group" onClick={onClose}>
+          <div className="w-9 h-9 rounded-lg bg-[#0084FF]/15 border border-[#0084FF]/40 flex items-center justify-center shrink-0 shadow-sm shadow-[#0084FF]/20">
+            <span className="text-[18px] font-black text-[#0084FF] leading-none select-none tracking-tight">
+              R
+            </span>
+          </div>
           <div>
-            <div className="flex items-center gap-2">
-              <span className="font-bold text-[16px] text-white tracking-tight leading-none">
-                Revyn
-              </span>
-              <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-500/20 text-blue-400 border border-blue-500/30 leading-none">
-                AI
-              </span>
+            <div className="text-[16px] font-bold tracking-tight text-[#F8FAFC] leading-none">
+              Revyn<span className="text-[#0084FF]">AI</span>
             </div>
-            <p className="text-[11px] text-zinc-400 mt-1 font-medium leading-none">
-              Revenue Recovery Agent
-            </p>
+            <div className="text-[11px] text-[#64748B] mt-1 font-medium">
+              Payment Recovery Agent
+            </div>
           </div>
+        </Link>
+      </div>
+
+      {/* ── Navigation ── */}
+      <nav className="flex-1 px-3 py-6 space-y-1 overflow-y-auto">
+        <div className="px-3 pb-2 text-[10px] font-bold uppercase tracking-wider text-[#64748B]">
+          Operations
         </div>
-      </div>
-
-      {/* ── Safety Status Banner (12px gap below logo block) ─── */}
-      <div className="px-4 pt-3">
-        {killSwitchActive ? (
-          <div className="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/30 flex items-center gap-2.5">
-            <ShieldAlert className="w-4 h-4 shrink-0 text-rose-400 animate-pulse" />
-            <div>
-              <span className="text-xs font-bold text-rose-300 block">KILL SWITCH ACTIVE</span>
-              <span className="text-[10px] text-rose-400/70">All recovery ops paused</span>
-            </div>
-          </div>
-        ) : (
-          <div className="p-2.5 rounded-xl bg-emerald-500/5 border border-emerald-500/20 flex items-center gap-2.5">
-            <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-            <div>
-              <span className="text-xs font-semibold text-emerald-300 block">Policy Engine Active</span>
-              <span className="text-[10px] text-zinc-500">Guardrails enforced · v1.0.0</span>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* ── Navigation (strict 4px gap between items) ───────── */}
-      <nav className="flex-1 px-3 pt-3 pb-4 flex flex-col gap-1">
-        {navigation.map((item) => {
-          const isActive = pathname === item.href;
-          const Icon = item.icon;
+        {NAV_ITEMS.map(({ name, href, icon: Icon }) => {
+          const isActive = pathname === href;
           return (
             <Link
-              key={item.name}
-              href={item.href}
+              key={href}
+              href={href}
+              onClick={onClose}
               className={cn(
-                "relative flex items-center gap-3 pl-3.5 pr-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 group overflow-hidden",
+                "flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-[13px] font-medium transition-all group",
                 isActive
-                  ? "bg-blue-600/20 text-blue-300 border-l-[3px] border-blue-500 font-semibold"
-                  : "text-zinc-400 hover:text-zinc-100 hover:bg-white/5 border-l-[3px] border-transparent"
+                  ? "bg-[#0084FF]/15 text-[#38BDF8] border border-[#0084FF]/30 font-semibold shadow-sm shadow-[#0084FF]/10"
+                  : "text-[#94A3B8] hover:text-[#F8FAFC] hover:bg-[#141C2E] border border-transparent"
               )}
             >
               <Icon
                 className={cn(
-                  "w-[18px] h-[18px] shrink-0",
-                  isActive ? "text-blue-400" : "text-zinc-500 group-hover:text-zinc-300"
+                  "w-4 h-4 shrink-0 transition-colors",
+                  isActive ? "text-[#0084FF]" : "text-[#64748B] group-hover:text-[#94A3B8]"
                 )}
               />
-              <span>{item.name}</span>
+              <span>{name}</span>
+              {isActive && (
+                <span className="ml-auto w-1.5 h-1.5 rounded-full bg-[#0084FF] shadow-[0_0_8px_#0084FF]" />
+              )}
             </Link>
           );
         })}
       </nav>
 
-      {/* ── Bottom Footer (16px padding from bottom edge) ────── */}
-      <div className="p-4 border-t border-[#374151]/60">
-        <div className="flex items-center gap-2 text-[11px] text-zinc-400 opacity-60">
-          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-          <span>Razorpay Test Mode Only</span>
+      {/* ── Kill Switch Pinned Card ── */}
+      <div className="p-4 border-t border-[#1C273E] bg-[#06080F]/50">
+        <div
+          className={cn(
+            "p-3.5 rounded-xl border transition-all",
+            killActive
+              ? "bg-red-500/10 border-red-500/40"
+              : "bg-[#0F1523] border-[#1C273E]"
+          )}
+        >
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <span
+                className={cn(
+                  "w-2 h-2 rounded-full",
+                  killActive ? "bg-red-500 animate-pulse" : "bg-emerald-400"
+                )}
+              />
+              <span
+                className={cn(
+                  "text-[11px] font-bold uppercase tracking-wider",
+                  killActive ? "text-red-400" : "text-emerald-400"
+                )}
+              >
+                {killActive ? "HALTED" : "SYSTEM ACTIVE"}
+              </span>
+            </div>
+          </div>
+          <p className="text-[11px] text-[#94A3B8] leading-normal mb-3">
+            {killActive
+              ? "Autonomous ops paused. No links dispatched."
+              : "Guardrails active · v1.0.0"}
+          </p>
+          <button
+            onClick={() => setConfirmKill(true)}
+            disabled={loading}
+            className={cn(
+              "w-full py-2 px-3 rounded-lg text-[12px] font-bold transition-all flex items-center justify-center gap-1.5 shadow-sm active:scale-98",
+              killActive
+                ? "bg-emerald-500 hover:bg-emerald-400 text-black"
+                : "bg-red-600 hover:bg-red-500 text-white shadow-red-600/20"
+            )}
+          >
+            <Power className="w-3.5 h-3.5" />
+            <span>{killActive ? "Resume Operations" : "Kill Switch"}</span>
+          </button>
         </div>
       </div>
-    </div>
-  );
 
-  return (
-    <>
-      {/* ── Desktop Sidebar ──────────────────────────────────── */}
-      <aside className="hidden md:flex w-64 bg-[#0B0F19] border-r border-[#374151]/60 shrink-0 h-screen sticky top-0 flex-col overflow-y-auto">
-        <SidebarContent />
-      </aside>
-
-      {/* ── Mobile Hamburger Button ──────────────────────────── */}
-      <button
-        onClick={() => setMobileOpen(true)}
-        className="md:hidden fixed top-4 left-4 z-40 p-2 rounded-lg bg-[#111827] border border-[#374151] text-zinc-300 shadow-lg"
-        aria-label="Open menu"
-      >
-        <Menu className="w-5 h-5" />
-      </button>
-
-      {/* ── Mobile Overlay (40% backdrop per spec) ──────────── */}
-      {mobileOpen && (
-        <>
-          <div
-            className="md:hidden fixed inset-0 z-40 bg-black/40 backdrop-blur-sm"
-            onClick={() => setMobileOpen(false)}
-          />
-          <aside className="md:hidden fixed left-0 top-0 bottom-0 z-50 w-72 bg-[#0B0F19] border-r border-[#374151]/60 overflow-y-auto shadow-2xl">
-            <button
-              onClick={() => setMobileOpen(false)}
-              className="absolute top-4 right-4 p-1.5 rounded-lg bg-[#1F2937] text-zinc-400 hover:text-white"
-            >
-              <X className="w-4 h-4" />
-            </button>
-            <SidebarContent />
-          </aside>
-        </>
+      {/* Confirmation Modal */}
+      {confirmKill && (
+        <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-sm rounded-2xl bg-[#0F1523] border border-[#1C273E] p-6 space-y-4 shadow-2xl">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-red-500/15 border border-red-500/30 flex items-center justify-center text-red-400 shrink-0">
+                <AlertTriangle className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="text-[15px] font-bold text-[#F8FAFC]">
+                  {killActive ? "Resume Operations?" : "Arm Emergency Kill Switch?"}
+                </h4>
+                <p className="text-[12px] text-[#94A3B8] mt-0.5">
+                  {killActive
+                    ? "Allows recovery actions and link creation."
+                    : "Halts all automated customer actions instantly."}
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-2.5 pt-2">
+              <button
+                onClick={() => setConfirmKill(false)}
+                className="flex-1 py-2 rounded-lg bg-[#141C2E] hover:bg-[#18233A] text-[13px] font-medium text-[#94A3B8] transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={toggleKill}
+                className={cn(
+                  "flex-1 py-2 rounded-lg text-[13px] font-bold text-white transition-colors",
+                  killActive ? "bg-emerald-600 hover:bg-emerald-500" : "bg-red-600 hover:bg-red-500"
+                )}
+              >
+                {killActive ? "Yes, Resume" : "Yes, Halt"}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
-    </>
+    </div>
   );
 }
