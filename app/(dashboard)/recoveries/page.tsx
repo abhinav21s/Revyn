@@ -64,10 +64,10 @@ export default function RecoveriesPage() {
         ))}
       </div>
 
-      {/* ── Split Layout Container: Left Table + Right Detail (No Overlay / No Transparency) ── */}
-      <div className="flex flex-col xl:flex-row items-start gap-6">
-        {/* Left Side: Recovery Cases Table (always fully opaque & interactive) */}
-        <div className="flex-1 min-w-0 w-full">
+      {/* ── Split Layout Container: Left Table + Right Detail (Active at all screen sizes) ── */}
+      <div className="flex flex-row items-start gap-4 lg:gap-6 w-full min-w-0">
+        {/* Left Side: Recovery Cases Table */}
+        <div className={`min-w-0 overflow-hidden transition-all duration-200 ${selectedCase ? "w-[56%] lg:w-[60%]" : "w-full"}`}>
           <Panel
             title="Recovery cases"
             description="Dense operational table with root-cause diagnoses, attempt counts, and deterministic policy actions"
@@ -85,17 +85,18 @@ export default function RecoveriesPage() {
             <RecoveryTable
               cases={cases}
               loading={loading}
+              selectedCaseId={selectedCase?.id}
               onSelectCase={(c) => setSelectedCase(c)}
               onRefresh={loadCases}
               onRunBatch={loadCases}
-              compact={false}
+              compact={!!selectedCase}
             />
           </Panel>
         </div>
 
-        {/* Right Side: Detailed Section Split (Opaque, side-by-side, no backdrop) */}
+        {/* Right Side: Detailed Section Split (Proportional width guaranteed to stay on screen) */}
         {selectedCase && (
-          <div className="w-full xl:w-[480px] shrink-0 xl:sticky xl:top-24">
+          <div className="w-[44%] lg:w-[40%] min-w-0 shrink-0 sticky top-20">
             <CaseDetail
               paymentCase={selectedCase}
               onClose={() => setSelectedCase(null)}

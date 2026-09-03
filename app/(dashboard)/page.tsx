@@ -53,9 +53,9 @@ export default function DashboardPage() {
       {/* ── 2. Analytical Panels: Recovery Rate vs Naïve Retry + Root Cause Distribution ── */}
       <DashboardCharts cases={cases} metrics={metrics} />
 
-      {/* ── 3. Recent recoveries split layout: Left Table + Right Details ── */}
-      <div className="flex flex-col xl:flex-row items-start gap-6">
-        <div className="flex-1 min-w-0 w-full">
+      {/* ── 3. Recent recoveries split layout: Left Table + Right Details (Active at all screen sizes) ── */}
+      <div className="flex flex-row items-start gap-4 lg:gap-6 w-full min-w-0">
+        <div className={`min-w-0 overflow-hidden transition-all duration-200 ${selectedCase ? "w-[56%] lg:w-[60%]" : "w-full"}`}>
           <Panel
             title="Recent recoveries"
             description="Live telemetry of payment failure recoveries"
@@ -72,6 +72,7 @@ export default function DashboardPage() {
             <RecoveryTable
               cases={cases}
               loading={loading}
+              selectedCaseId={selectedCase?.id}
               onSelectCase={setSelectedCase}
               onRefresh={loadData}
               onRunBatch={loadData}
@@ -80,9 +81,9 @@ export default function DashboardPage() {
           </Panel>
         </div>
 
-        {/* Right Side: Detailed info on transaction click */}
+        {/* Right Side: Detailed info on transaction click (Proportional width stays on screen) */}
         {selectedCase && (
-          <div className="w-full xl:w-[480px] shrink-0 xl:sticky xl:top-24">
+          <div className="w-[44%] lg:w-[40%] min-w-0 shrink-0 sticky top-20">
             <CaseDetail
               paymentCase={selectedCase}
               onClose={() => setSelectedCase(null)}

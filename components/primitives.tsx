@@ -21,7 +21,7 @@ export function Panel({
   return (
     <div
       className={cn(
-        "rounded-2xl border border-[#1C273E] bg-[#0F1523] shadow-lg shadow-black/40 overflow-hidden",
+        "rounded-2xl border border-[#1C273E] bg-[#0F1523] shadow-lg shadow-black/40 overflow-hidden min-w-0",
         className
       )}
     >

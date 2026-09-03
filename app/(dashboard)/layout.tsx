@@ -34,7 +34,7 @@ export default function DashboardLayout({
       {/* Main Content Area: flex-1 min-w-0, completely unblocked */}
       <div className="flex-1 flex flex-col min-w-0">
         <TopBar onToggleSidebar={() => setMobileSidebarOpen(true)} />
-        <main className="flex-1 px-4 sm:px-8 py-8 max-w-[1440px] w-full mx-auto">
+        <main className="flex-1 px-4 sm:px-6 lg:px-8 py-8 max-w-[1440px] w-full mx-auto min-w-0">
           {children}
         </main>
       </div>

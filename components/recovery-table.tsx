@@ -14,6 +14,7 @@ interface RecoveryTableProps {
   onRefresh?: () => void;
   onRunBatch?: () => void;
   compact?: boolean;
+  selectedCaseId?: string;
 }
 
 export function RecoveryTable({
@@ -22,6 +23,7 @@ export function RecoveryTable({
   onSelectCase,
   onRunBatch,
   compact = false,
+  selectedCaseId,
 }: RecoveryTableProps) {
   const [filter, setFilter] = useState<string>("all");
   const [search, setSearch] = useState<string>("");
@@ -103,18 +105,18 @@ export function RecoveryTable({
       {/* ── Cases Table ── */}
       <div className="rounded-xl border border-[#1C273E] bg-[#0F1523] overflow-hidden shadow-lg shadow-black/30">
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse min-w-[960px]">
+          <table className={`w-full text-left border-collapse ${compact ? "min-w-[620px]" : "min-w-[960px]"}`}>
             <thead>
               <tr className="border-b border-[#1C273E] bg-[#090D17] text-[11px] uppercase tracking-wider font-bold text-[#64748B]">
-                <th className="py-3.5 px-5 w-[140px]">Payment ID</th>
-                <th className="py-3.5 px-5 w-[220px]">Customer</th>
-                <th className="py-3.5 px-5 w-[130px]">Amount</th>
-                <th className="py-3.5 px-5 w-[220px]">Root Cause</th>
+                <th className={`py-3.5 px-5 ${compact ? "w-[110px]" : "w-[140px]"}`}>Payment ID</th>
+                <th className={`py-3.5 px-5 ${compact ? "w-[160px]" : "w-[220px]"}`}>Customer</th>
+                <th className={`py-3.5 px-5 ${compact ? "w-[100px]" : "w-[130px]"}`}>Amount</th>
+                <th className={`py-3.5 px-5 ${compact ? "w-[160px]" : "w-[220px]"}`}>Root Cause</th>
                 {!compact && <th className="py-3.5 px-5 w-[90px]">Attempts</th>}
-                <th className="py-3.5 px-5 w-[130px]">Action</th>
-                <th className="py-3.5 px-5 w-[120px]">Status</th>
-                <th className="py-3.5 px-5 w-[140px]">Updated</th>
-                <th className="py-3.5 px-5 text-right w-[60px]">Inspect</th>
+                <th className={`py-3.5 px-5 ${compact ? "w-[110px]" : "w-[130px]"}`}>Action</th>
+                <th className={`py-3.5 px-5 ${compact ? "w-[100px]" : "w-[120px]"}`}>Status</th>
+                <th className={`py-3.5 px-5 ${compact ? "w-[110px]" : "w-[140px]"}`}>Updated</th>
+                <th className={`py-3.5 px-5 text-right ${compact ? "w-[40px]" : "w-[60px]"}`}>Inspect</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#1C273E]/50">
@@ -138,30 +140,36 @@ export function RecoveryTable({
                         !search && filter === "all" && onRunBatch ? (
                           <button
                             onClick={onRunBatch}
-                            className="px-4 py-2 rounded-lg text-[13px] font-bold bg-[#0084FF] hover:bg-[#0070D8] text-black flex items-center gap-2 mx-auto transition-all"
+                            className="px-4 py-2 rounded-lg text-[12px] font-semibold bg-[#0084FF] hover:bg-[#0084FF]/90 text-white flex items-center gap-2 mx-auto shadow-sm shadow-[#0084FF]/25 transition-all"
                           >
                             <Play className="w-3.5 h-3.5 fill-current" />
-                            <span>Run Recovery Batch</span>
+                            <span>Run First Batch</span>
                           </button>
-                        ) : null
+                        ) : undefined
                       }
                     />
                   </td>
                 </tr>
               ) : (
-                filteredCases.map((c) => (
-                  <tr
-                    key={c.id}
-                    onClick={() => onSelectCase(c)}
-                    className="hover:bg-[#141C2E] transition-colors cursor-pointer text-[13px] group"
-                  >
-                    {/* Payment ID */}
-                    <td className="py-4 px-5 font-mono text-[12px] font-bold text-[#0084FF] whitespace-nowrap">
-                      #{c.id.slice(0, 8).toUpperCase()}
-                    </td>
+                filteredCases.map((c) => {
+                  const isSelected = selectedCaseId === c.id;
+                  return (
+                    <tr
+                      key={c.id}
+                      onClick={() => onSelectCase(c)}
+                      className={`transition-colors cursor-pointer text-[13px] group ${
+                        isSelected
+                          ? "bg-[#0084FF]/15 hover:bg-[#0084FF]/20"
+                          : "hover:bg-[#141C2E]"
+                      }`}
+                    >
+                      {/* Payment ID */}
+                      <td className="py-4 px-5 font-mono text-[12px] font-bold text-[#0084FF] whitespace-nowrap">
+                        #{c.id.slice(0, 8).toUpperCase()}
+                      </td>
 
-                    {/* Customer */}
-                    <td className="py-4 px-5">
+                      {/* Customer */}
+                      <td className="py-4 px-5">
                       <div className="font-semibold text-[#F8FAFC] leading-tight">
                         {c.customer_name}
                       </div>
@@ -224,8 +232,9 @@ export function RecoveryTable({
                         <ChevronRight className="w-4 h-4" />
                       </button>
                     </td>
-                  </tr>
-                ))
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>

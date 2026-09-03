@@ -21,6 +21,8 @@ interface AuditLogViewerProps {
   logs: AuditLog[];
   loading?: boolean;
   onRefresh?: () => void;
+  selectedLogId?: string;
+  onSelectLog?: (log: AuditLog) => void;
 }
 
 const STAGES = [
@@ -36,6 +38,8 @@ export function AuditLogViewer({
   logs,
   loading = false,
   onRefresh,
+  selectedLogId,
+  onSelectLog,
 }: AuditLogViewerProps) {
   const [search, setSearch] = useState("");
   const [stageFilter, setStageFilter] = useState("all");
@@ -201,11 +205,21 @@ export function AuditLogViewer({
                     },
                   ];
 
+                  const isSelected = selectedLogId === log.id;
+
                   return (
                     <React.Fragment key={log.id}>
                       <tr
-                        onClick={() => setExpandedId(isExpanded ? null : log.id)}
-                        className="hover:bg-[#141C2E] transition-colors cursor-pointer text-[13px] group"
+                        onClick={() => {
+                          setExpandedId(isExpanded ? null : log.id);
+                          if (onSelectLog) onSelectLog(log);
+                        }}
+                        className={cn(
+                          "transition-colors cursor-pointer text-[13px] group",
+                          isSelected
+                            ? "bg-[#0084FF]/15 hover:bg-[#0084FF]/20"
+                            : "hover:bg-[#141C2E]"
+                        )}
                       >
                         {/* Stage pill */}
                         <td className="py-4 px-5">
