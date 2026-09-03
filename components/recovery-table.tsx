@@ -43,25 +43,25 @@ export function RecoveryTable({
       label: "All",
       value: "all",
       count: cases.length,
-      activeStyle: "bg-[rgba(79,124,255,0.1)] text-[#4F7CFF] border-[rgba(79,124,255,0.3)]",
+      activeStyle: "bg-[rgba(79,124,255,0.12)] text-[#4F7CFF] border-[rgba(79,124,255,0.3)]",
     },
     {
       label: "Recovered",
       value: "recovered",
       count: cases.filter((c) => c.status === "recovered").length,
-      activeStyle: "bg-[rgba(34,197,94,0.15)] text-[#22C55E] border-[rgba(34,197,94,0.3)]",
+      activeStyle: "bg-[rgba(34,197,94,0.12)] text-[#22C55E] border-[rgba(34,197,94,0.3)]",
     },
     {
       label: "In Progress",
       value: "in_progress",
       count: cases.filter((c) => c.status === "in_progress").length,
-      activeStyle: "bg-[rgba(245,158,11,0.15)] text-[#F59E0B] border-[rgba(245,158,11,0.3)]",
+      activeStyle: "bg-[rgba(245,158,11,0.12)] text-[#F59E0B] border-[rgba(245,158,11,0.3)]",
     },
     {
       label: "Escalated",
       value: "escalated",
       count: cases.filter((c) => c.status === "escalated").length,
-      activeStyle: "bg-[rgba(239,68,68,0.15)] text-[#EF4444] border-[rgba(239,68,68,0.3)]",
+      activeStyle: "bg-[rgba(239,68,68,0.12)] text-[#EF4444] border-[rgba(239,68,68,0.3)]",
     },
     {
       label: "Unrecoverable",
@@ -73,24 +73,26 @@ export function RecoveryTable({
 
   return (
     <div className="w-full">
-      {/* ── Section 4: Filter Bar + Search Bar Container ── */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 py-4 border-b border-[rgba(38,48,69,0.4)] mb-4">
-        {/* Filter Tabs */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 md:pb-0">
+      {/* ── Section 6: Filter Tabs + Search Bar (height 40px, margin: 16px 0, gap >= 24px) ── */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 my-4">
+        {/* Filter Tabs (pill: padding 8px 16px, border-radius 8px, font-size 13px, gap 8px) */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
           {filterTabs.map((tab) => {
             const isActive = filter === tab.value;
             return (
               <button
                 key={tab.value}
+                type="button"
                 onClick={() => setFilter(tab.value)}
-                className={`px-4 py-2 rounded-[8px] text-[13px] font-medium transition-colors flex items-center border whitespace-nowrap ${
+                className={`h-[40px] px-4 py-2 rounded-[8px] text-[13px] font-medium transition-colors flex items-center border whitespace-nowrap ${
                   isActive
-                    ? tab.activeStyle
+                    ? `${tab.activeStyle} font-semibold`
                     : "bg-transparent text-[#94A3B8] border-transparent hover:bg-[#1A2233]"
                 }`}
               >
                 <span>{tab.label}</span>
-                <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-[#1A2233] text-[11px] text-[#94A3B8] font-mono leading-none">
+                {/* Count badge: separate small pill after 6px gap, padding 1px 7px, rounded-999px, bg: #1A2233 */}
+                <span className="ml-[6px] px-[7px] py-[1px] rounded-full bg-[#1A2233] text-[11px] text-[#94A3B8] font-mono leading-none">
                   {tab.count}
                 </span>
               </button>
@@ -98,24 +100,24 @@ export function RecoveryTable({
           })}
         </div>
 
-        {/* Search Input (Height: 40px, width: 320px desktop, 100% mobile, left padding 40px for 16px icon) */}
-        <div className="relative w-full md:w-[320px]">
-          <Search className="w-4 h-4 text-[#5B6B85] absolute left-3 top-3 pointer-events-none" />
+        {/* Search Input (position relative, width 320px desktop / 100% mobile, left padding 40px strictly separating icon & text) */}
+        <div className="relative w-full sm:w-[320px] shrink-0">
+          <Search className="w-4 h-4 text-[#5B6B85] absolute left-[14px] top-[12px] pointer-events-none" />
           <input
             type="text"
             placeholder="Search by case or customer…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="h-[40px] w-full bg-[#121826] border border-[#2E3A52] rounded-[8px] pl-10 pr-4 text-[13px] text-[#F4F6FA] placeholder-[#5B6B85] focus:outline-none focus:border-[#4F7CFF] focus:ring-2 focus:ring-[rgba(79,124,255,0.2)] transition-all"
+            className="h-[40px] w-full bg-[#121826] border border-[#2E3A52] rounded-[8px] pl-[40px] pr-[14px] text-[14px] text-[#F4F6FA] placeholder-[#5B6B85] focus:outline-none focus:border-[#4F7CFF] focus:ring-2 focus:ring-[rgba(79,124,255,0.2)] transition-all"
           />
         </div>
       </div>
 
-      {/* ── Section 5: Table ── */}
-      <div className="rounded-[12px] bg-[#121826] border border-[rgba(38,48,69,0.4)] overflow-hidden shadow-sm">
+      {/* ── Section 7: Table Container (rounded 12px, background: #121826, border: 1px solid rgba(38,48,69,0.3)) ── */}
+      <div className="rounded-[12px] bg-[#121826] border border-[rgba(38,48,69,0.3)] overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
-            {/* Header row: bg-[#1A2233], 12px font-weight: 600, uppercase, letter-spacing: 0.04em, color: #5B6B85, padding: 12px 16px */}
+            {/* Header row: bg-[#1A2233], padding 12px 16px per cell, font-size: 12px, font-weight 600, uppercase, letter-spacing 0.04em, color: #5B6B85 */}
             <thead>
               <tr className="bg-[#1A2233] border-b border-[#2E3A52]">
                 <th className="py-3 px-4 text-[12px] font-semibold text-[#5B6B85] uppercase tracking-[0.04em]">
@@ -142,21 +144,21 @@ export function RecoveryTable({
               </tr>
             </thead>
 
-            {/* Data rows: padding 14px 16px, border-bottom 1px solid rgba(38,48,69,0.4), font-size: 13px, hover: bg-[#202B40] */}
+            {/* Data rows: padding 14px 16px per cell, border-bottom 1px solid rgba(38,48,69,0.3), font-size 13px, hover: bg-[#202B40] */}
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="py-12 text-center text-[#5B6B85] text-[13px]">
+                  <td colSpan={7} className="py-16 text-center text-[#5B6B85] text-[13px]">
                     Loading cases…
                   </td>
                 </tr>
               ) : filteredCases.length === 0 ? (
-                /* Empty state: padding 48px 0, icon + text "No cases yet — run a batch to populate this table" */
+                /* Empty state: padding 64px 0, centered, icon 24px + 12px margin + text */
                 <tr>
-                  <td colSpan={7} className="py-12 px-4 text-center">
-                    <div className="flex flex-col items-center justify-center gap-2">
-                      <Inbox className="w-8 h-8 text-[#5B6B85]" />
-                      <p className="text-[14px] text-[#5B6B85]">
+                  <td colSpan={7} className="py-16 px-4 text-center">
+                    <div className="flex flex-col items-center justify-center">
+                      <Inbox className="w-6 h-6 text-[#5B6B85]" />
+                      <p className="text-[14px] text-[#5B6B85] mt-3">
                         {search || filter !== "all"
                           ? "No cases match your filter criteria"
                           : "No cases yet — run a batch to populate this table"}
@@ -164,10 +166,10 @@ export function RecoveryTable({
                       {!search && filter === "all" && onRunBatch && (
                         <button
                           onClick={onRunBatch}
-                          className="mt-2 px-4 py-2 rounded-[8px] bg-[#4F7CFF] text-white text-[13px] font-semibold hover:bg-[#6B91FF] flex items-center gap-2"
+                          className="mt-4 px-5 py-2.5 rounded-[8px] bg-[#4F7CFF] text-white text-[13px] font-semibold hover:bg-[#6B91FF] inline-flex items-center gap-2 transition-all whitespace-nowrap"
                         >
                           <Play className="w-3.5 h-3.5 fill-current" />
-                          Run Batch Recovery
+                          <span>Run Batch Recovery</span>
                         </button>
                       )}
                     </div>
@@ -178,10 +180,10 @@ export function RecoveryTable({
                   <tr
                     key={c.id}
                     onClick={() => onSelectCase(c)}
-                    className="border-b border-[rgba(38,48,69,0.4)] hover:bg-[#202B40] transition-colors cursor-pointer text-[13px]"
+                    className="border-b border-[rgba(38,48,69,0.3)] hover:bg-[#202B40] transition-colors cursor-pointer text-[13px]"
                   >
                     {/* Case / Customer */}
-                    <td className="py-3.5 px-4">
+                    <td className="py-[14px] px-4">
                       <div className="font-medium text-[#F4F6FA] leading-tight">
                         {c.customer_name}
                       </div>
@@ -191,32 +193,32 @@ export function RecoveryTable({
                     </td>
 
                     {/* Amount (tabular-nums font-weight 600) */}
-                    <td className="py-3.5 px-4 font-semibold text-[#F4F6FA] tabular-nums">
+                    <td className="py-[14px] px-4 font-semibold text-[#F4F6FA] tabular-nums">
                       {formatCurrency(c.amount)}
                     </td>
 
-                    {/* Root Cause (monospace pill) */}
-                    <td className="py-3.5 px-4">
+                    {/* Root Cause (monospace pill: padding 3px 10px, radius 6px, bg: #0B0F19, border: #2E3A52, 11px) */}
+                    <td className="py-[14px] px-4">
                       <RootCauseBadge cause={c.root_cause} method={c.diagnosis_method} />
                     </td>
 
                     {/* Policy Action */}
-                    <td className="py-3.5 px-4">
+                    <td className="py-[14px] px-4">
                       <ActionBadge action={c.policy_action} />
                     </td>
 
-                    {/* Status (colored pill with dot) */}
-                    <td className="py-3.5 px-4">
+                    {/* Status (colored pill with 6px dot) */}
+                    <td className="py-[14px] px-4">
                       <StatusBadge status={c.status} />
                     </td>
 
                     {/* Ingested */}
-                    <td className="py-3.5 px-4 text-[#94A3B8] text-[12px] whitespace-nowrap">
+                    <td className="py-[14px] px-4 text-[#94A3B8] text-[12px] whitespace-nowrap">
                       {formatDate(c.created_at)}
                     </td>
 
-                    {/* Action: 32x32px icon button */}
-                    <td className="py-3.5 px-4 text-right">
+                    {/* Action: 32x32px icon button, hover: bg-[#202B40] */}
+                    <td className="py-[14px] px-4 text-right">
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
