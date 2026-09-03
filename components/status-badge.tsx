@@ -1,65 +1,53 @@
 import React from "react";
 import type { CaseStatus, RootCause, PolicyAction } from "@/lib/types";
-import {
-  CheckCircle2,
-  Clock,
-  AlertTriangle,
-  XCircle,
-  ShieldAlert,
-  HelpCircle,
-  RefreshCw,
-  Send,
-  UserX,
-  Zap,
-} from "lucide-react";
 
 export function StatusBadge({ status }: { status: CaseStatus }) {
   switch (status) {
     case "recovered":
       return (
-        <span className="h-[22px] px-2 rounded-md inline-flex items-center gap-1.5 text-[11px] font-semibold bg-emerald-500/12 text-emerald-400 border border-emerald-500/25 shrink-0">
-          <CheckCircle2 className="w-3 h-3" />
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[6px] text-[12px] font-medium bg-[rgba(34,197,94,0.1)] text-[#22C55E] border border-[rgba(34,197,94,0.25)] shrink-0">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#22C55E]" />
           Recovered
         </span>
       );
     case "in_progress":
       return (
-        <span className="h-[22px] px-2 rounded-md inline-flex items-center gap-1.5 text-[11px] font-semibold bg-blue-500/12 text-blue-400 border border-blue-500/25 shrink-0">
-          <RefreshCw className="w-3 h-3 animate-spin" />
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[6px] text-[12px] font-medium bg-[rgba(245,158,11,0.1)] text-[#F59E0B] border border-[rgba(245,158,11,0.25)] shrink-0">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#F59E0B] animate-pulse" />
           In Progress
         </span>
       );
     case "pending":
       return (
-        <span className="h-[22px] px-2 rounded-md inline-flex items-center gap-1.5 text-[11px] font-semibold bg-amber-500/12 text-amber-400 border border-amber-500/25 shrink-0">
-          <Clock className="w-3 h-3" />
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[6px] text-[12px] font-medium bg-[rgba(245,158,11,0.1)] text-[#F59E0B] border border-[rgba(245,158,11,0.25)] shrink-0">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#F59E0B]" />
           Pending
         </span>
       );
     case "escalated":
       return (
-        <span className="h-[22px] px-2 rounded-md inline-flex items-center gap-1.5 text-[11px] font-semibold bg-purple-500/12 text-purple-400 border border-purple-500/25 shrink-0">
-          <AlertTriangle className="w-3 h-3" />
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[6px] text-[12px] font-medium bg-[rgba(239,68,68,0.1)] text-[#EF4444] border border-[rgba(239,68,68,0.25)] shrink-0">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#EF4444]" />
           Escalated
         </span>
       );
     case "unrecoverable":
       return (
-        <span className="h-[22px] px-2 rounded-md inline-flex items-center gap-1.5 text-[11px] font-semibold bg-[#1F2937] text-zinc-400 border border-[#374151] shrink-0">
-          <XCircle className="w-3 h-3" />
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[6px] text-[12px] font-medium bg-[rgba(100,116,139,0.1)] text-[#64748B] border border-[rgba(100,116,139,0.25)] shrink-0">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#64748B]" />
           Unrecoverable
         </span>
       );
     case "halted":
       return (
-        <span className="h-[22px] px-2 rounded-md inline-flex items-center gap-1.5 text-[11px] font-semibold bg-rose-500/12 text-rose-400 border border-rose-500/25 shrink-0">
-          <ShieldAlert className="w-3 h-3" />
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[6px] text-[12px] font-medium bg-[rgba(239,68,68,0.1)] text-[#EF4444] border border-[rgba(239,68,68,0.25)] shrink-0">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#EF4444]" />
           Halted
         </span>
       );
     default:
       return (
-        <span className="h-[22px] px-2 rounded-md inline-flex items-center gap-1.5 text-[11px] font-semibold bg-[#1F2937] text-zinc-300 border border-[#374151] shrink-0">
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[6px] text-[12px] font-medium bg-[#1A2233] text-[#94A3B8] border border-[#2E3A52] shrink-0">
           {status}
         </span>
       );
@@ -75,31 +63,25 @@ export function RootCauseBadge({
 }) {
   if (!cause) {
     return (
-      <span className="inline-flex items-center gap-1 text-xs text-zinc-500">
-        <HelpCircle className="w-3 h-3" />
-        Unclassified
+      <span className="text-[12px] text-[#5B6B85] font-mono">
+        unclassified
       </span>
     );
   }
-
-  const label = cause
-    .split("_")
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-    .join(" ");
 
   const isLLM = method === "llm_groq";
 
   return (
     <div className="inline-flex items-center gap-1.5 flex-wrap">
-      <span className="h-[22px] px-2 rounded-md inline-flex items-center text-[11px] font-medium bg-[#1F2937] text-zinc-200 border border-[#374151]/60 shrink-0">
-        {label}
+      {/* Root Cause pill: padding: 3px 10px, border-radius: 6px, bg: #0B0F19, border: #2E3A52, monospace, font-size: 11px */}
+      <span className="px-[10px] py-[3px] rounded-[6px] bg-[#0B0F19] border border-[#2E3A52] text-[11px] font-mono text-[#F4F6FA] shrink-0">
+        {cause}
       </span>
       {isLLM && (
         <span
-          title="Diagnosed via Groq Llama 3.3 70B (Ambiguous case)"
-          className="h-[20px] px-1.5 rounded-md inline-flex items-center gap-1 text-[10px] font-bold bg-indigo-500/15 text-indigo-300 border border-indigo-500/25 shrink-0"
+          title="Diagnosed via Groq Llama 3.3 70B"
+          className="px-1.5 py-[2px] rounded-[4px] text-[10px] font-medium bg-[rgba(79,124,255,0.15)] text-[#4F7CFF] border border-[rgba(79,124,255,0.3)] shrink-0"
         >
-          <Zap className="w-2.5 h-2.5" />
           Groq AI
         </span>
       )}
@@ -113,35 +95,35 @@ export function ActionBadge({ action }: { action?: PolicyAction }) {
   switch (action) {
     case "smart_retry":
       return (
-        <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-400">
-          <RefreshCw className="w-3.5 h-3.5" /> Smart Retry
+        <span className="text-[12px] font-medium text-[#4F7CFF]">
+          Smart Retry
         </span>
       );
     case "send_payment_link":
       return (
-        <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-400">
-          <Send className="w-3.5 h-3.5" /> Razorpay Link
+        <span className="text-[12px] font-medium text-[#22C55E]">
+          Razorpay Link
         </span>
       );
     case "escalate_to_human":
       return (
-        <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-purple-400">
-          <AlertTriangle className="w-3.5 h-3.5" /> Escalate
+        <span className="text-[12px] font-medium text-[#EF4444]">
+          Escalate
         </span>
       );
     case "mark_unrecoverable":
       return (
-        <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-zinc-400">
-          <UserX className="w-3.5 h-3.5" /> Hard Stop
+        <span className="text-[12px] font-medium text-[#64748B]">
+          Hard Stop
         </span>
       );
     case "halt_kill_switch":
       return (
-        <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-rose-400">
-          <ShieldAlert className="w-3.5 h-3.5" /> Kill Switch
+        <span className="text-[12px] font-medium text-[#EF4444]">
+          Kill Switch
         </span>
       );
     default:
-      return <span className="text-xs text-zinc-400">{action}</span>;
+      return <span className="text-[12px] text-[#94A3B8]">{action}</span>;
   }
 }

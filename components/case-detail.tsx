@@ -12,10 +12,7 @@ import {
   Copy,
   Check,
   MessageSquare,
-  Zap,
-  AlertTriangle,
   RefreshCw,
-  ChevronRight,
 } from "lucide-react";
 
 interface CaseDetailProps {
@@ -104,42 +101,42 @@ export function CaseDetail({ paymentCase, onClose, onCaseUpdated }: CaseDetailPr
       <div className="flex-1" onClick={onClose} />
 
       {/* Drawer */}
-      <div className="w-full max-w-xl bg-[#0B0F19] border-l border-[#374151]/60 h-full overflow-y-auto flex flex-col shadow-2xl slide-in-right">
-        {/* ── Header ─────────────────────────────────────────── */}
-        <div className="px-6 py-5 border-b border-[#374151]/60 flex items-center justify-between sticky top-0 bg-[#0B0F19]/95 backdrop-blur z-10">
+      <div className="w-full max-w-xl bg-[#0B0F19] border-l border-[#2E3A52] h-full overflow-y-auto flex flex-col shadow-2xl slide-in-right">
+        {/* Header */}
+        <div className="px-6 py-5 border-b border-[rgba(38,48,69,0.4)] flex items-center justify-between sticky top-0 bg-[#0B0F19]/95 backdrop-blur z-10">
           <div>
             <div className="flex items-center gap-2.5 flex-wrap">
-              <span className="text-sm font-bold text-white font-mono">
+              <span className="text-[14px] font-semibold text-[#F4F6FA] font-mono">
                 #{paymentCase.id.slice(0, 8).toUpperCase()}
               </span>
               <StatusBadge status={simulated ? "recovered" : paymentCase.status} />
             </div>
-            <p className="text-xs text-zinc-500 mt-1">
+            <p className="text-[12px] text-[#5B6B85] mt-1">
               {paymentCase.merchant_id} · {formatDate(paymentCase.created_at)}
             </p>
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-xl bg-[#1F2937] hover:bg-[#374151] text-zinc-400 hover:text-white flex items-center justify-center transition-colors"
+            className="w-8 h-8 rounded-[6px] bg-[#1A2233] hover:bg-[#202B40] text-[#94A3B8] hover:text-[#F4F6FA] flex items-center justify-center transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        <div className="flex-1 p-6 space-y-5">
-          {/* ── Amount Summary ─────────────────────────────────── */}
-          <div className="p-5 rounded-2xl bg-[#111827] border border-[#374151]/60 flex items-center justify-between gap-4">
+        <div className="flex-1 p-6 space-y-4">
+          {/* Amount Summary */}
+          <div className="p-5 rounded-[12px] bg-[#121826] border border-[rgba(38,48,69,0.4)] flex items-center justify-between gap-4 shadow-sm">
             <div>
-              <span className="text-xs text-zinc-500 font-medium block mb-1">
+              <span className="text-[11px] text-[#5B6B85] uppercase tracking-[0.04em] font-semibold block mb-1">
                 Amount at Risk
               </span>
-              <div className="text-2xl font-bold text-white tracking-tight tabular-nums">
+              <div className="text-[24px] font-bold text-[#F4F6FA] tabular-nums tracking-tight">
                 {formatCurrency(paymentCase.amount)}
               </div>
-              <div className="text-xs text-zinc-500 mt-1.5">
+              <div className="text-[12px] text-[#94A3B8] mt-1">
                 {paymentCase.customer_name}
                 {paymentCase.customer_phone && (
-                  <span className="text-zinc-600 ml-1.5">· {paymentCase.customer_phone}</span>
+                  <span className="text-[#5B6B85] ml-1.5">· {paymentCase.customer_phone}</span>
                 )}
               </div>
             </div>
@@ -148,166 +145,156 @@ export function CaseDetail({ paymentCase, onClose, onCaseUpdated }: CaseDetailPr
               <button
                 onClick={handleSimulatePayment}
                 disabled={simulating}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs font-bold shadow-lg shadow-emerald-900/30 transition-all hover:scale-[1.02] active:scale-100 shrink-0"
+                className="flex items-center gap-1.5 px-4 py-2 rounded-[8px] bg-[#22C55E] hover:bg-[#22C55E]/90 disabled:opacity-50 text-white text-[13px] font-semibold transition-all shadow-md shadow-[#22C55E]/20 shrink-0"
               >
                 {simulating ? (
-                  <RefreshCw className="w-4 h-4 animate-spin" />
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin" />
                 ) : (
-                  <CheckCircle2 className="w-4 h-4" />
+                  <CheckCircle2 className="w-3.5 h-3.5" />
                 )}
                 <span>{simulating ? "Simulating…" : "Simulate Paid"}</span>
               </button>
             ) : (
-              <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-500/12 border border-emerald-500/25 text-emerald-400 text-xs font-bold shrink-0">
-                <CheckCircle2 className="w-4 h-4" />
+              <div className="flex items-center gap-1 px-3 py-1.5 rounded-[6px] bg-[rgba(34,197,94,0.1)] border border-[rgba(34,197,94,0.3)] text-[#22C55E] text-[12px] font-semibold shrink-0">
+                <CheckCircle2 className="w-3.5 h-3.5" />
                 Recovered
               </div>
             )}
           </div>
 
-          {/* ── Step 1: Diagnosis ─────────────────────────────── */}
-          <div className="p-5 rounded-2xl bg-[#111827] border border-[#374151]/60 space-y-4">
+          {/* Step 1: Diagnosis */}
+          <div className="p-5 rounded-[12px] bg-[#121826] border border-[rgba(38,48,69,0.4)] space-y-3">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <span className="w-6 h-6 rounded-lg bg-indigo-500/15 text-indigo-400 text-xs font-bold flex items-center justify-center border border-indigo-500/20">
+              <div className="flex items-center gap-2">
+                <span className="w-5 h-5 rounded-[4px] bg-[rgba(79,124,255,0.15)] text-[#4F7CFF] text-[11px] font-bold flex items-center justify-center">
                   1
                 </span>
-                <h3 className="text-sm font-bold text-white">Root Cause Diagnosis</h3>
+                <h3 className="text-[14px] font-semibold text-[#F4F6FA]">Root Cause Diagnosis</h3>
               </div>
               <RootCauseBadge cause={paymentCase.root_cause} method={paymentCase.diagnosis_method} />
             </div>
 
-            <div className="rounded-xl bg-[#0B0F19] border border-[#374151]/60 p-4 space-y-3 text-xs">
+            <div className="rounded-[8px] bg-[#0B0F19] border border-[#2E3A52] p-3.5 space-y-2 text-[12px]">
               <div className="flex items-start justify-between gap-2">
-                <span className="text-zinc-500 shrink-0">Error Code:</span>
-                <span className="font-mono text-zinc-200 text-right">{paymentCase.error_code}</span>
+                <span className="text-[#5B6B85] shrink-0">Error Code:</span>
+                <span className="font-mono text-[#F4F6FA] text-right">{paymentCase.error_code}</span>
               </div>
               <div className="flex items-start justify-between gap-2">
-                <span className="text-zinc-500 shrink-0">Message:</span>
-                <span className="text-zinc-300 italic text-right">"{paymentCase.error_message}"</span>
+                <span className="text-[#5B6B85] shrink-0">Message:</span>
+                <span className="text-[#94A3B8] italic text-right">"{paymentCase.error_message}"</span>
               </div>
               {paymentCase.diagnosis_confidence !== undefined && (
-                <div className="flex items-center justify-between pt-2 border-t border-[#374151]/60">
-                  <span className="text-zinc-500">AI Confidence:</span>
-                  <span className="text-emerald-400 font-bold font-mono">
+                <div className="flex items-center justify-between pt-1.5 border-t border-[#2E3A52]">
+                  <span className="text-[#5B6B85]">AI Confidence:</span>
+                  <span className="text-[#22C55E] font-bold font-mono">
                     {((paymentCase.diagnosis_confidence || 0) * 100).toFixed(0)}%
                   </span>
                 </div>
               )}
-              {paymentCase.diagnosis_explanation && (
-                <p className="text-[11px] text-zinc-400 pt-1 leading-relaxed">
-                  💡 {paymentCase.diagnosis_explanation}
-                </p>
-              )}
             </div>
           </div>
 
-          {/* ── Step 2: Policy Decision ────────────────────────── */}
-          <div className="p-5 rounded-2xl bg-[#111827] border border-[#374151]/60 space-y-4">
+          {/* Step 2: Policy Decision */}
+          <div className="p-5 rounded-[12px] bg-[#121826] border border-[rgba(38,48,69,0.4)] space-y-3">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <span className="w-6 h-6 rounded-lg bg-blue-500/15 text-blue-400 text-xs font-bold flex items-center justify-center border border-blue-500/20">
+              <div className="flex items-center gap-2">
+                <span className="w-5 h-5 rounded-[4px] bg-[rgba(79,124,255,0.15)] text-[#4F7CFF] text-[11px] font-bold flex items-center justify-center">
                   2
                 </span>
-                <h3 className="text-sm font-bold text-white">Policy Engine Decision</h3>
+                <h3 className="text-[14px] font-semibold text-[#F4F6FA]">Policy Engine Decision</h3>
               </div>
               <ActionBadge action={paymentCase.policy_action} />
             </div>
 
-            <div className="rounded-xl bg-[#0B0F19] border border-[#374151]/60 p-4 space-y-3 text-xs">
+            <div className="rounded-[8px] bg-[#0B0F19] border border-[#2E3A52] p-3.5 space-y-2 text-[12px]">
               <div className="flex items-center justify-between">
-                <span className="text-zinc-500">Rule Triggered:</span>
-                <span className="font-mono text-blue-400 font-bold bg-blue-500/8 border border-blue-500/20 px-2 py-0.5 rounded-lg">
+                <span className="text-[#5B6B85]">Rule Triggered:</span>
+                <span className="font-mono text-[#4F7CFF] font-semibold bg-[rgba(79,124,255,0.1)] border border-[rgba(79,124,255,0.25)] px-2 py-0.5 rounded-[4px]">
                   {paymentCase.policy_rule || "DEFAULT_SAFEGUARD"}
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-zinc-500">Retry Count:</span>
-                <span className="text-zinc-300 font-mono">{paymentCase.retry_count} / 3</span>
+                <span className="text-[#5B6B85]">Retry Count:</span>
+                <span className="text-[#F4F6FA] font-mono">{paymentCase.retry_count} / 3</span>
               </div>
-              <div className="pt-2 border-t border-[#374151]/60 text-zinc-400 leading-relaxed">
-                <span className="text-zinc-500">Reason: </span>
+              <div className="pt-1.5 border-t border-[#2E3A52] text-[#94A3B8] leading-normal">
+                <span className="text-[#5B6B85]">Reason: </span>
                 {paymentCase.policy_reason || "Evaluated by deterministic engine"}
               </div>
             </div>
           </div>
 
-          {/* ── Step 3: Razorpay Link ─────────────────────────── */}
+          {/* Step 3: Razorpay Link */}
           {paymentCase.payment_link_url && (
-            <div className="p-5 rounded-2xl bg-[#111827] border border-[#374151]/60 space-y-4">
+            <div className="p-5 rounded-[12px] bg-[#121826] border border-[rgba(38,48,69,0.4)] space-y-3">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <span className="w-6 h-6 rounded-lg bg-emerald-500/15 text-emerald-400 text-xs font-bold flex items-center justify-center border border-emerald-500/20">
+                <div className="flex items-center gap-2">
+                  <span className="w-5 h-5 rounded-[4px] bg-[rgba(34,197,94,0.15)] text-[#22C55E] text-[11px] font-bold flex items-center justify-center">
                     3
                   </span>
-                  <h3 className="text-sm font-bold text-white">Razorpay Recovery Link</h3>
+                  <h3 className="text-[14px] font-semibold text-[#F4F6FA]">Razorpay Recovery Link</h3>
                 </div>
-                <span className="text-[10px] font-bold text-emerald-400 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 font-mono">
+                <span className="text-[10px] font-semibold text-[#F59E0B] px-2 py-0.5 rounded-full bg-[rgba(245,158,11,0.1)] border border-[rgba(245,158,11,0.25)] font-mono">
                   TEST MODE
                 </span>
               </div>
 
               {/* Link Row */}
-              <div className="flex items-center gap-2 p-3 rounded-xl bg-[#0B0F19] border border-[#374151]/60">
-                <span className="text-xs font-mono text-blue-400 truncate flex-1">
+              <div className="flex items-center gap-2 p-2.5 rounded-[8px] bg-[#0B0F19] border border-[#2E3A52]">
+                <span className="text-[12px] font-mono text-[#4F7CFF] truncate flex-1">
                   {paymentCase.payment_link_url}
                 </span>
                 <button
                   onClick={() => copyPaymentLink(paymentCase.payment_link_url!)}
                   title="Copy link"
-                  className="p-2 rounded-lg bg-[#1F2937] hover:bg-[#374151] text-zinc-400 hover:text-white transition-colors shrink-0"
+                  className="p-1.5 rounded-[6px] bg-[#1A2233] hover:bg-[#202B40] text-[#94A3B8] hover:text-[#F4F6FA] transition-colors shrink-0"
                 >
-                  {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                  {copied ? <Check className="w-3.5 h-3.5 text-[#22C55E]" /> : <Copy className="w-3.5 h-3.5" />}
                 </button>
                 <a
                   href={paymentCase.payment_link_url}
                   target="_blank"
                   rel="noreferrer"
                   title="Open link"
-                  className="p-2 rounded-lg bg-[#1F2937] hover:bg-[#374151] text-zinc-400 hover:text-white transition-colors shrink-0"
+                  className="p-1.5 rounded-[6px] bg-[#1A2233] hover:bg-[#202B40] text-[#94A3B8] hover:text-[#F4F6FA] transition-colors shrink-0"
                 >
                   <ExternalLink className="w-3.5 h-3.5" />
                 </a>
               </div>
 
               {/* Hinglish Message */}
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 text-xs font-semibold text-zinc-400">
-                  <MessageSquare className="w-3.5 h-3.5 text-emerald-400" />
-                  <span>Personalized Hinglish Recovery Message</span>
+              <div className="space-y-1.5">
+                <div className="flex items-center gap-1.5 text-[12px] font-medium text-[#94A3B8]">
+                  <MessageSquare className="w-3.5 h-3.5 text-[#22C55E]" />
+                  <span>Personalized Hinglish Message</span>
                 </div>
-                <div className="p-4 rounded-xl bg-emerald-950/30 border border-emerald-500/20 text-xs text-emerald-100/90 leading-relaxed">
+                <div className="p-3.5 rounded-[8px] bg-[#0B0F19] border border-[#2E3A52] text-[12px] text-[#F4F6FA] leading-relaxed">
                   {getHinglishMessage()}
                 </div>
               </div>
             </div>
           )}
 
-          {/* ── Case Audit Timeline ───────────────────────────── */}
-          <div className="space-y-3">
-            <h3 className="text-sm font-bold text-white flex items-center gap-2">
-              <ShieldCheck className="w-4 h-4 text-blue-400" />
-              <span>Case Audit History</span>
-              {loadingLogs && <RefreshCw className="w-3.5 h-3.5 text-zinc-500 animate-spin ml-1" />}
+          {/* Case Audit Timeline */}
+          <div className="space-y-2 pt-1">
+            <h3 className="text-[14px] font-semibold text-[#F4F6FA] flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4 text-[#4F7CFF]" />
+              <span>Case Audit Records</span>
+              {loadingLogs && <RefreshCw className="w-3.5 h-3.5 text-[#5B6B85] animate-spin ml-1" />}
             </h3>
 
             {!loadingLogs && logs.length === 0 ? (
-              <p className="text-xs text-zinc-600 italic">No audit entries for this case yet.</p>
+              <p className="text-[12px] text-[#5B6B85] italic">No audit records for this case yet.</p>
             ) : (
-              <div className="space-y-3 ml-3 border-l-2 border-[#374151]/60 pl-4">
+              <div className="space-y-2.5 ml-2 border-l border-[#2E3A52] pl-3.5">
                 {logs.map((log) => (
-                  <div key={log.id} className="relative text-xs space-y-1">
-                    <div className="absolute -left-[21px] top-1 w-2.5 h-2.5 rounded-full bg-[#374151] border-2 border-[#0B0F19]" />
+                  <div key={log.id} className="relative text-[12px] space-y-0.5">
+                    <div className="absolute -left-[18px] top-1.5 w-1.5 h-1.5 rounded-full bg-[#4F7CFF]" />
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-bold text-zinc-200">[{log.step}] {log.action}</span>
-                      <span className="text-[10px] text-zinc-600">{formatDate(log.created_at)}</span>
+                      <span className="font-medium text-[#F4F6FA]">[{log.step}] {log.action}</span>
+                      <span className="text-[10px] text-[#5B6B85]">{formatDate(log.created_at)}</span>
                     </div>
-                    <p className="text-zinc-400 leading-relaxed">{log.reason}</p>
-                    {log.policy_rule && (
-                      <span className="inline-block text-[10px] font-mono text-blue-400 bg-blue-500/8 border border-blue-500/20 px-1.5 py-0.5 rounded-lg">
-                        {log.policy_rule}
-                      </span>
-                    )}
+                    <p className="text-[#94A3B8] leading-normal">{log.reason}</p>
                   </div>
                 ))}
               </div>
@@ -315,12 +302,12 @@ export function CaseDetail({ paymentCase, onClose, onCaseUpdated }: CaseDetailPr
           </div>
         </div>
 
-        {/* ── Footer ─────────────────────────────────────────── */}
-        <div className="px-6 py-4 border-t border-[#374151]/60 flex items-center justify-between bg-[#0B0F19]">
-          <span className="text-[11px] text-zinc-600">Revyn · Immutable Audit Ledger</span>
+        {/* Footer */}
+        <div className="px-6 py-4 border-t border-[rgba(38,48,69,0.4)] flex items-center justify-between bg-[#0B0F19]">
+          <span className="text-[11px] text-[#5B6B85]">Revyn · Immutable Audit Ledger</span>
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded-xl bg-[#1F2937] hover:bg-[#374151] text-xs font-semibold text-zinc-300 transition-colors"
+            className="px-3.5 py-1.5 rounded-[6px] bg-[#1A2233] hover:bg-[#202B40] text-[12px] font-medium text-[#94A3B8] hover:text-[#F4F6FA] transition-colors"
           >
             Close
           </button>

@@ -49,71 +49,70 @@ export function KillSwitchControl({
   return (
     <>
       <div
-        className={`py-5 px-6 rounded-2xl border transition-all duration-300 ${
+        className={`p-6 rounded-[12px] border transition-all ${
           active
-            ? "bg-rose-950/30 border-rose-500/40 shadow-lg shadow-rose-950/30"
-            : "bg-[#111827] border-[#374151]/60"
+            ? "bg-[rgba(239,68,68,0.1)] border-[#EF4444]/40"
+            : "bg-[#121826] border-[rgba(38,48,69,0.4)]"
         }`}
       >
-        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-5">
           {/* Info Block */}
-          <div className="flex items-start gap-3.5">
+          <div className="flex items-start gap-4">
             <div
-              className={`w-11 h-11 rounded-2xl border flex items-center justify-center shrink-0 ${
+              className={`w-10 h-10 rounded-[8px] border flex items-center justify-center shrink-0 ${
                 active
-                  ? "bg-rose-500/15 border-rose-500/30"
-                  : "bg-[#1F2937] border-[#374151]/60"
+                  ? "bg-[rgba(239,68,68,0.2)] border-[#EF4444]/50"
+                  : "bg-[#1A2233] border-[#2E3A52]"
               }`}
             >
               {active ? (
-                <ShieldAlert className="w-5 h-5 text-rose-400 animate-pulse" />
+                <ShieldAlert className="w-5 h-5 text-[#EF4444]" />
               ) : (
-                <ShieldCheck className="w-5 h-5 text-emerald-400" />
+                <ShieldCheck className="w-5 h-5 text-[#22C55E]" />
               )}
             </div>
             <div>
-              <h3 className="text-[15px] font-bold text-white tracking-tight leading-tight">
+              <h3 className="text-[16px] font-semibold text-[#F4F6FA] leading-tight">
                 Emergency Kill Switch
               </h3>
-              <p className="text-xs text-zinc-400 opacity-75 leading-normal max-w-xl mt-1">
-                Immediately halts all automated recovery operations, stops Razorpay payment link creation,
-                and pauses all batch processing. Incoming failed payments are safely parked with status{" "}
-                <code className="text-rose-400 text-[11px] bg-rose-500/10 px-1 py-0.5 rounded">HALTED</code>.
+              <p className="text-[13px] text-[#94A3B8] leading-[1.5] max-w-xl mt-1">
+                Immediately halts all autonomous recovery actions, disables Razorpay payment link generation,
+                and pauses all batch execution. Failed payments are safely held in status{" "}
+                <code className="text-[#EF4444] text-[11px] bg-[rgba(239,68,68,0.1)] border border-[rgba(239,68,68,0.2)] px-1.5 py-0.5 rounded">HALTED</code>.
               </p>
-              {/* Status text sitting 8px (mt-2) below description */}
-              <div className="mt-2 flex items-center gap-2">
+              <div className="mt-3 flex items-center gap-2">
                 <span
-                  className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full border ${
+                  className={`inline-flex items-center gap-1.5 text-[12px] font-medium px-2.5 py-1 rounded-full border ${
                     active
-                      ? "bg-rose-500/15 text-rose-300 border-rose-500/30"
-                      : "bg-emerald-500/8 text-emerald-400 border-emerald-500/20"
+                      ? "bg-[rgba(239,68,68,0.15)] text-[#EF4444] border-[rgba(239,68,68,0.3)]"
+                      : "bg-[#0F2A1C] text-[#22C55E] border-[rgba(34,197,94,0.3)]"
                   }`}
                 >
                   <span
                     className={`w-1.5 h-1.5 rounded-full ${
-                      active ? "bg-rose-400 animate-pulse" : "bg-emerald-400"
+                      active ? "bg-[#EF4444] animate-pulse" : "bg-[#22C55E]"
                     }`}
                   />
-                  {active ? "KILL SWITCH ACTIVE — All ops halted" : "System operational — All guardrails active"}
+                  {active ? "KILL SWITCH ACTIVE — All ops halted" : "System operational — Guardrails active"}
                 </span>
               </div>
             </div>
           </div>
 
-          {/* Toggle Button (height 36px, aligned to right side) */}
+          {/* Toggle Button */}
           <button
             onClick={() => setConfirmOpen(true)}
             disabled={loading}
-            className={`h-[36px] px-5 rounded-xl text-xs font-bold transition-all duration-150 shadow-lg shrink-0 flex items-center justify-center gap-2 hover:-translate-y-px active:translate-y-0 ${
+            className={`px-5 py-2.5 rounded-[8px] text-[13px] font-semibold transition-all shrink-0 flex items-center gap-2 ${
               active
-                ? "bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-900/30"
-                : "bg-rose-600 hover:bg-rose-500 text-white shadow-rose-900/30"
+                ? "bg-[#22C55E] hover:bg-[#22C55E]/90 text-white shadow-md shadow-[#22C55E]/20"
+                : "bg-[#EF4444] hover:bg-[#EF4444]/90 text-white shadow-md shadow-[#EF4444]/20"
             } disabled:opacity-60 disabled:cursor-not-allowed`}
           >
             {loading ? (
-              <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+              <RefreshCw className="w-4 h-4 animate-spin" />
             ) : (
-              <Power className="w-3.5 h-3.5" />
+              <Power className="w-4 h-4" />
             )}
             <span>
               {active ? "Deactivate Kill Switch" : "Activate Kill Switch"}
@@ -124,49 +123,49 @@ export function KillSwitchControl({
 
       {/* Confirmation Modal */}
       {confirmOpen && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="w-full max-w-md bg-[#111827] border border-[#374151] rounded-2xl p-6 space-y-4 shadow-2xl">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-md bg-[#121826] border border-[#2E3A52] rounded-[12px] p-6 space-y-4 shadow-2xl">
             <div className="flex items-center gap-3">
               <div
-                className={`w-10 h-10 rounded-xl flex items-center justify-center border ${
+                className={`w-10 h-10 rounded-[8px] flex items-center justify-center border ${
                   active
-                    ? "bg-emerald-500/10 border-emerald-500/20"
-                    : "bg-rose-500/10 border-rose-500/20"
+                    ? "bg-[rgba(34,197,94,0.1)] border-[rgba(34,197,94,0.3)]"
+                    : "bg-[rgba(239,68,68,0.1)] border-[rgba(239,68,68,0.3)]"
                 }`}
               >
                 <AlertTriangle
-                  className={`w-5 h-5 ${active ? "text-emerald-400" : "text-rose-400"}`}
+                  className={`w-5 h-5 ${active ? "text-[#22C55E]" : "text-[#EF4444]"}`}
                 />
               </div>
-              <h4 className="text-base font-bold text-white leading-tight">
+              <h4 className="text-[16px] font-semibold text-[#F4F6FA] leading-tight">
                 {active
-                  ? "Resume Recovery Operations?"
+                  ? "Resume Autonomous Operations?"
                   : "Activate Emergency Kill Switch?"}
               </h4>
             </div>
 
-            <p className="text-xs text-zinc-400 leading-relaxed">
+            <p className="text-[13px] text-[#94A3B8] leading-relaxed">
               {active
-                ? "This will re-enable the Policy Engine and allow Revyn to process failed payments and create Razorpay Test Mode payment links."
-                : "This will immediately halt all automated Revyn recovery actions. No payments will be retried and no Razorpay links will be created until deactivated."}
+                ? "This will resume the policy engine and allow recovery link creation in Razorpay Test Mode."
+                : "This immediately stops all Revyn automated recovery actions. No links will be generated until deactivated."}
             </p>
 
-            <div className="flex items-center gap-3 pt-1">
+            <div className="flex items-center gap-3 pt-2">
               <button
                 onClick={() => setConfirmOpen(false)}
-                className="flex-1 h-[36px] rounded-xl bg-[#1F2937] hover:bg-[#374151] text-xs font-semibold text-zinc-300 transition-colors"
+                className="flex-1 py-2 px-4 rounded-[8px] bg-[#1A2233] hover:bg-[#202B40] text-[13px] font-medium text-[#94A3B8] transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={() => toggleKillSwitch(!active)}
-                className={`flex-1 h-[36px] rounded-xl text-xs font-bold text-white transition-colors ${
+                className={`flex-1 py-2 px-4 rounded-[8px] text-[13px] font-semibold text-white transition-colors ${
                   active
-                    ? "bg-emerald-600 hover:bg-emerald-500"
-                    : "bg-rose-600 hover:bg-rose-500"
+                    ? "bg-[#22C55E] hover:bg-[#22C55E]/90"
+                    : "bg-[#EF4444] hover:bg-[#EF4444]/90"
                 }`}
               >
-                {active ? "Yes, Resume Operations" : "Yes, Activate Kill Switch"}
+                {active ? "Yes, Resume" : "Yes, Activate"}
               </button>
             </div>
           </div>

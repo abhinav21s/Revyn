@@ -1,13 +1,12 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { TopBar } from "@/components/top-bar";
 import { MetricsCards } from "@/components/metrics-cards";
 import { BatchRunner } from "@/components/batch-runner";
 import { RecoveryTable } from "@/components/recovery-table";
 import { CaseDetail } from "@/components/case-detail";
 import type { PaymentCase, BatchMetrics } from "@/lib/types";
-import { Layers, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 
 export default function DashboardPage() {
@@ -16,7 +15,6 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [selectedCase, setSelectedCase] = useState<PaymentCase | null>(null);
   const [killSwitchActive, setKillSwitchActive] = useState(false);
-  const [runBatchTrigger, setRunBatchTrigger] = useState(0);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -27,8 +25,14 @@ export default function DashboardPage() {
         fetch("/api/settings"),
       ]);
       if (mRes.ok) setMetrics(await mRes.json());
-      if (cRes.ok) { const d = await cRes.json(); setCases(d.cases || []); }
-      if (sRes.ok) { const d = await sRes.json(); setKillSwitchActive(d.settings?.kill_switch === "true"); }
+      if (cRes.ok) {
+        const d = await cRes.json();
+        setCases(d.cases || []);
+      }
+      if (sRes.ok) {
+        const d = await sRes.json();
+        setKillSwitchActive(d.settings?.kill_switch === "true");
+      }
     } catch (e) {
       console.error("Failed to load dashboard data:", e);
     } finally {
@@ -41,48 +45,48 @@ export default function DashboardPage() {
   }, [loadData]);
 
   return (
-    <div className="space-y-6 md:space-y-8">
-      <TopBar
-        title="Revenue Recovery Overview"
-        subtitle="Bounded AI agent for recovering failed payments across Indian merchants"
-      />
+    <div className="space-y-6">
+      {/* ── Section 6 Typography: H1 (28px, font-weight 700, letter-spacing -0.02em) ── */}
+      <div>
+        <h1 className="text-[28px] font-bold text-[#F4F6FA] tracking-[-0.02em] leading-tight">
+          Revenue Recovery Overview
+        </h1>
+        <p className="text-[14px] text-[#94A3B8] leading-[1.5] mt-1">
+          Bounded AI payment recovery agent for Indian merchants using Razorpay.
+        </p>
+      </div>
 
-      {/* Metrics */}
+      {/* Metric Cards (Revenue at Risk, Recovered, Rate, Safety Stops) */}
       <MetricsCards metrics={metrics} loading={loading} />
 
-      {/* Batch Runner */}
+      {/* Execute Recovery Pipeline Card (Section 3) */}
       <BatchRunner
         onBatchCompleted={loadData}
         killSwitchActive={killSwitchActive}
       />
 
-      {/* Recent Cases */}
+      {/* Recent Payment Cases Block */}
       <div>
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <Layers className="w-4 h-4 text-blue-400" />
-            <h2 className="text-[15px] font-bold text-white tracking-tight">
-              Recent Payment Cases
-            </h2>
-            {!loading && (
-              <span className="text-xs text-zinc-500 font-mono">({cases.length})</span>
-            )}
-          </div>
+        <div className="flex items-center justify-between mb-2">
+          <h2 className="text-[18px] font-semibold text-[#F4F6FA] tracking-tight">
+            Recent Payment Cases
+          </h2>
           <Link
             href="/recoveries"
-            className="text-xs text-blue-400 hover:text-blue-300 font-semibold flex items-center gap-1 transition-colors"
+            className="text-[13px] text-[#4F7CFF] hover:text-[#6B91FF] font-medium flex items-center gap-1 transition-colors"
           >
-            View all cases
+            <span>View all cases</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </Link>
         </div>
 
+        {/* Search Bar / Filter Tabs + Table (Section 4 & 5) */}
         <RecoveryTable
           cases={cases}
           loading={loading}
           onSelectCase={setSelectedCase}
           onRefresh={loadData}
-          onRunBatch={() => setRunBatchTrigger((n) => n + 1)}
+          onRunBatch={loadData}
         />
       </div>
 

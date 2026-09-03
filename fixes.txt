@@ -1,140 +1,218 @@
-================================================================================
-REVYN – DETAILED UI/UX FIX LIST (Current Version)
-Precise spacing, positioning, alignment and interaction fixes
-================================================================================
+REVYN – UI/UX FIX SPECIFICATION
+=================================
+Prepared for: revyn-web.vercel.app
+Context: Bounded AI Payment Recovery Agent (Razorpay AI Buildathon, Track 3)
+Goal: Elevate from "hackathon demo" to "fintech-grade product" look
 
-1. SIDEBAR
-----------
-- Logo + “Revyn” text: increase size slightly. Logo should be 28–32px, text 16–17px bold.
-- Reduce the gap between logo block and “Policy Engine Active” badge to 12px.
-- Active nav item (Dashboard): add a 3px solid primary-blue left border and increase background opacity slightly.
-- Nav items vertical spacing: set consistent 4px gap between each item (currently slightly uneven).
-- Bottom of sidebar: add 16px padding from the bottom edge. Remove any leftover track/buildathon text if still present.
-- “Razorpay Test Mode Only” footer text: make it 11px and reduce opacity to 60%.
+---------------------------------------------------------------
+1. COLOR SYSTEM (replace current ad-hoc dark theme)
+---------------------------------------------------------------
+Rationale: This is a fintech/compliance product. The palette needs to say
+"trustworthy, audited, safe" — not generic AI-startup purple/gradient.
+Keep the dark base (already on-brand via theme-color #0B0F19) but structure
+it into a proper token system instead of flat black/gray.
 
-2. TOP HEADER AREA
-------------------
-- Page title “Revenue Recovery Overview”: keep current size but reduce subtitle opacity to 70% and set subtitle margin-top to 4px.
-- Status pills on the right (TEST MODE + Guardrails OK):
-  - Make both pills same height (28px).
-  - Add 8px gap between the two pills.
-  - Align them vertically center with the title block.
-- Overall header bottom margin: increase to 24px before the metric cards.
+BASE (background layers — creates depth without clutter):
+  --bg-canvas:        #0B0F19   (page background, keep as-is)
+  --bg-surface:        #121826   (cards, panels)
+  --bg-surface-raised: #1A2233   (header bar, table header row, modals)
+  --bg-surface-hover:  #202B40   (row hover, button hover)
+  --border-subtle:     #26304566  (hairline borders, 40% opacity)
+  --border-default:    #2E3A52
 
-3. METRIC CARDS (TOP ROW)
--------------------------
-- Card height: force all four cards to exactly the same height (currently slightly uneven).
-- Internal padding: set to 20px all sides.
-- Gap between the four cards: exactly 16px.
-- Icon size inside cards: 18–20px, place 12px from top and 16px from right.
-- Large number: keep bold, reduce letter-spacing by 0.5px for tighter look.
-- Secondary text under number: 12px, margin-top 6px.
-- “REVENUE AT RISK” label: make all four labels the same font-size and weight.
+TEXT:
+  --text-primary:   #F4F6FA
+  --text-secondary: #94A3B8
+  --text-muted:     #5B6B85
 
-4. EXECUTE RECOVERY PIPELINE BLOCK
-----------------------------------
-- Top margin from metric cards: 24px.
-- Internal padding: 20px 24px.
-- Left icon + title: align vertically center, 12px gap between icon and title.
-- Description text: max-width 520px, line-height 1.5, opacity 75%.
-- Right side controls (Batch dropdown + Run button + Trash):
-  - Align all three items vertically center.
-  - Gap between dropdown and Run button: 12px.
-  - Gap between Run button and Trash icon: 8px.
-- Run Batch Recovery button: height 36–40px, horizontal padding 20px.
-- Add a subtle hover lift (translateY -1px) and transition 150ms ease.
+BRAND / ACCENT (primary action color — pick ONE, not blue+purple+green all at once):
+  --accent-primary:      #4F7CFF   (electric indigo-blue — trust + tech)
+  --accent-primary-hover:#6B91FF
+  --accent-primary-dim:  #4F7CFF1A (10% opacity, for active-state backgrounds)
 
-5. RECENT PAYMENT CASES SECTION
--------------------------------
-- Section title + count: margin-bottom 16px.
-- Filter tabs row:
-  - Height of each tab pill: 28px.
-  - Horizontal gap between tabs: 8px.
-  - Active tab: stronger background + 1px border in primary color.
-- Search input:
-  - Height 36px.
-  - Padding-left 36px (for search icon).
-  - Border-radius 8px.
-  - Focus ring: 2px primary blue with 20% opacity.
-- Table header:
-  - Background slightly lighter than body (#1F2937).
-  - Padding top/bottom 12px.
-  - Font-size 11px, uppercase, letter-spacing 0.5px, opacity 70%.
-- Table body rows:
-  - Height 52–56px.
-  - Vertical padding 10px.
-  - Hover background: very subtle (#1F2937 at 40% opacity).
-  - Transition on hover: 120ms ease.
-- Status badges: consistent height 22px, padding 0 8px, border-radius 6px.
-- “Inspect →” button: make it a ghost button with consistent padding and hover state.
+STATUS COLORS (used in "Root Cause" / "Status" columns — needs to be
+immediately scannable since this is an audit-trail product):
+  --status-recovered:    #22C55E  (green)
+  --status-recovered-bg: #22C55E1A
+  --status-in-progress:  #F59E0B  (amber)
+  --status-in-progress-bg:#F59E0B1A
+  --status-escalated:    #EF4444  (red)
+  --status-escalated-bg: #EF44441A
+  --status-unrecoverable:#64748B  (slate gray, deliberately desaturated —
+                                   signals "closed/inactive", not alarming)
+  --status-unrecoverable-bg:#64748B1A
 
-6. RECOVERIES PAGE (WORKSPACE)
-------------------------------
-- Top summary cards (Total / Recovered / Escalated / Unrecoverable):
-  - Make all four the same height.
-  - Gap between them: 16px.
-  - Internal padding 16px 20px.
-- “All Payment Cases” title row: margin-top 24px, margin-bottom 12px.
-- Table styling: match exactly the Dashboard table (same row height, badge style, hover).
+GUARDRAIL / SAFETY BADGE (this is your key differentiator — give it its
+own distinct color so judges' eyes go straight to it):
+  --guardrail-active: #22C55E
+  --guardrail-badge-bg: #0F2A1C
+  --guardrail-badge-border: #22C55E4D
 
-7. AUDIT TRAIL PAGE
--------------------
-- “Compliance-Grade Audit Standard” info card:
-  - Padding 16px 20px.
-  - Margin-bottom 20px.
-- Step filter tabs: same style and spacing as the cases filter tabs.
-- Table:
-  - STEP column badges: keep color coding but make width consistent.
-  - Reason column: allow 2-line clamp with tooltip on hover.
-  - Expandable chevron: 16px size, rotate 90deg on open with 150ms transition.
-- Total Entries counter: align right, font-weight 600.
+Do NOT use more than 2 accent hues total (accent-primary + status colors
+count as functional, not decorative). Avoid rainbow gradients on buttons.
 
-8. SETTINGS PAGE
-----------------
-- Kill Switch card:
-  - Increase internal padding to 20px 24px.
-  - Status text (“System operational…”) should sit 8px below the description.
-  - “Activate Kill Switch” button: height 36px, align to the right side of the card.
-- Policy rules grid:
-  - 2×2 grid with 16px gap.
-  - Each rule card padding 16px.
-  - Title and value should have 6px vertical gap.
-- Integration health cards:
-  - Three cards in a row with 16px gap.
-  - Equal height.
-  - Status badge (Ready / Connected) aligned to the top-right of each card.
+---------------------------------------------------------------
+2. HEADER (currently cramped)
+---------------------------------------------------------------
+Problems observed: logo, tagline, badges ("Policy Engine Active",
+"Guardrails enforced", "v1.0.0") and nav links are all fighting for the
+same horizontal row with no breathing room.
 
-9. GLOBAL SPACING & RHYTHM
---------------------------
-- Main content left padding (after sidebar): 28–32px.
-- Main content right padding: 28–32px.
-- Maximum content width: keep current but ensure consistent side padding.
-- Vertical section spacing throughout the app: use 24px or 32px only (avoid random 18px / 22px values).
+Fix — restructure into 2 rows:
 
-10. TRANSITIONS & MICRO-INTERACTIONS
-------------------------------------
-- All buttons: transition 150ms cubic-bezier(0.4, 0, 0.2, 1).
-- Cards hover (optional): very subtle scale(1.01) or border-color change, 150ms.
-- Sidebar active state: transition background and border 150ms.
-- Drawer / modal open: 200ms ease-out.
-- Toast / success banners: slide down + fade, 200ms.
+ROW 1 (Height: 64px, background: --bg-surface-raised, border-bottom: 1px
+solid --border-subtle):
+  - Logo "RevynAI"        → left-aligned, padding-left: 32px
+  - Logo font-size: 20px, font-weight: 700, letter-spacing: -0.02em
+  - Nav links (Dashboard / Recoveries / Audit Trail / Settings & Safety)
+    → horizontally centered as a group, gap: 32px between each link
+    → font-size: 14px, font-weight: 500, color: --text-secondary
+    → active link: color: --text-primary, with a 2px --accent-primary
+      underline, 8px below text
+  - Right side: "Razorpay Test Mode Only" badge
+    → padding: 6px 12px, border-radius: 6px, background: --status-in-progress-bg,
+      border: 1px solid --status-in-progress4D, font-size: 12px
+    → padding-right: 32px from edge
 
-11. MOBILE FIXES
-----------------
-- Metric cards: stack with 12px gap, full width.
-- Execute Pipeline block: stack the controls vertically with 12px gap.
-- Table: enable horizontal scroll with padding-bottom 8px for the scrollbar.
-- Sidebar: collapse to hamburger, overlay with 40% black backdrop.
-- Top status pills: move under the title or into a compact row.
+ROW 2 (Height: 44px, background: --bg-canvas, border-bottom: 1px solid
+--border-subtle):
+  - "Revenue Recovery Agent" tagline → left, padding-left: 32px,
+    font-size: 13px, color: --text-muted
+  - "Policy Engine Active" + "Guardrails enforced · v1.0.0" → move here,
+    right-aligned, padding-right: 32px, gap: 16px between the two badges
+  - Each badge: padding 4px 10px, border-radius: 999px (pill shape),
+    font-size: 11px, with a 6px green dot (●) before "Policy Engine Active"
 
-12. FINAL POLISH
-----------------
-- Favicon: confirm new logo is used (not lightning).
-- All icons: use consistent stroke width (1.5px or 2px).
-- Scrollbars: dark theme styled (thin, rounded, low contrast).
-- Selection color: primary blue at 30% opacity.
-- Make sure no element is closer than 8px to another interactive element.
+Overall: header total height goes from whatever cramped single row it is
+now to 108px (64+44), giving each element its own lane instead of
+overlapping visually.
 
-================================================================================
-END OF DETAILED UI/UX FIX LIST
-================================================================================
+---------------------------------------------------------------
+3. PAGE LAYOUT / LEFT SECTION (currently too cramped)
+---------------------------------------------------------------
+Current issue: "Execute Recovery Pipeline" panel and page content sit too
+close to the viewport edge and to each other, no clear grid.
+
+Fix:
+  - Page container: max-width: 1280px, centered (margin: 0 auto)
+  - Page horizontal padding: 32px (desktop), 16px (mobile <768px)
+  - Top padding below header: 40px before "Revenue Recovery Overview" H1
+  - Section vertical gap: 24px between every major block (H1 block →
+    Execute Recovery Pipeline card → Recent Payment Cases card)
+
+"Execute Recovery Pipeline" card:
+  - padding: 24px all sides (currently reads like 8-12px)
+  - border-radius: 12px
+  - background: --bg-surface
+  - border: 1px solid --border-subtle
+  - Title "Execute Recovery Pipeline": font-size 16px, font-weight 600,
+    margin-bottom: 8px
+  - Description text below title: font-size 14px, color --text-secondary,
+    line-height: 1.5, margin-bottom: 20px, max-width: 640px (don't let
+    it stretch full width, hurts readability)
+  - Batch size selector (10/20/50 cases): convert from plain text list to
+    3 segmented pill buttons, each padding: 8px 16px, gap: 8px between
+    pills, selected pill: background --accent-primary, text white;
+    unselected: background --bg-surface-raised, text --text-secondary
+  - "Run Batch Recovery" button: padding: 12px 24px, border-radius: 8px,
+    background --accent-primary, font-weight: 600, font-size: 14px,
+    margin-top: 20px, full-width on mobile only
+
+If this "Execute Recovery Pipeline" block is meant to sit in a LEFT
+SIDEBAR alongside a right-hand results panel (recommended for this
+dashboard type):
+  - Left column width: 320px fixed
+  - Right column: flex: 1 (remaining space)
+  - Gap between columns: 24px
+  - Left column becomes sticky (position: sticky, top: 88px) so it
+    stays visible while the case table scrolls
+
+---------------------------------------------------------------
+4. SEARCH BAR / FILTER TABS (currently unstyled)
+---------------------------------------------------------------
+Observed: "All / Recovered / In Progress / Escalated / Unrecoverable"
+with counts (0) appear as plain unstyled text tabs.
+
+Fix — convert to a proper filter bar:
+  - Container: display flex, gap: 8px, padding: 16px 0, border-bottom:
+    1px solid --border-subtle, margin-bottom: 16px
+  - Each tab: padding: 8px 16px, border-radius: 8px, font-size: 13px,
+    font-weight: 500
+    - Inactive tab: background transparent, color --text-secondary,
+      border: 1px solid transparent
+    - Active tab (e.g. "All"): background --accent-primary-dim,
+      color --accent-primary, border: 1px solid --accent-primary4D
+    - Count badge inside tab (the "0"): separate pill, margin-left: 6px,
+      padding: 1px 6px, border-radius: 999px, background --bg-surface-raised,
+      font-size: 11px
+  - Color-code the non-"All" tabs using their matching status color at
+    20% background when active (Recovered → green tint, Escalated →
+    red tint, etc.) so the filter bar itself previews the color coding
+    used in the table below.
+
+If there's meant to be an actual search input (searching by case/customer):
+  - Height: 40px, width: 320px (desktop), 100% (mobile)
+  - padding: 0 16px 0 40px (left padding accounts for icon)
+  - border-radius: 8px, border: 1px solid --border-default,
+    background: --bg-surface
+  - Search icon: 16px, positioned absolute, left: 12px, top: 12px,
+    color --text-muted
+  - Focus state: border-color --accent-primary, box-shadow:
+    0 0 0 3px --accent-primary-dim
+  - Placeholder text color: --text-muted
+  - Position: same row as filter tabs, right-aligned, or its own row
+    with 12px margin-bottom above the filter tabs
+
+---------------------------------------------------------------
+5. TABLE (Recent Payment Cases — currently empty/unstyled rows)
+---------------------------------------------------------------
+  - Header row: background --bg-surface-raised, font-size: 12px,
+    font-weight: 600, text-transform: uppercase, letter-spacing: 0.04em,
+    color --text-muted, padding: 12px 16px, border-bottom: 1px solid
+    --border-default
+  - Data rows: padding: 14px 16px per cell, border-bottom: 1px solid
+    --border-subtle, font-size: 13px
+  - Row hover: background --bg-surface-hover, transition: background 0.15s
+  - "Root Cause" column: render as a small pill (e.g. "insufficient_balance")
+    — padding 3px 10px, border-radius: 6px, background --bg-canvas,
+    border 1px solid --border-default, font-family monospace, font-size 11px
+  - "Status" column: colored pill using the status tokens from section 1
+    (dot + label, e.g. ● Recovered in green)
+  - "Action" column: icon button, 32x32px, border-radius: 6px,
+    hover background --bg-surface-hover
+  - Empty state (when no rows): don't leave blank white space — show a
+    centered placeholder, padding: 48px 0, icon + text "No cases yet —
+    run a batch to populate this table", color --text-muted, font-size 14px
+
+---------------------------------------------------------------
+6. TYPOGRAPHY (apply globally)
+---------------------------------------------------------------
+  - Font: Inter or system-ui stack (already reads like this — keep it,
+    it's appropriate for fintech/dashboard products)
+  - H1 ("Revenue Recovery Overview"): 28px, font-weight 700,
+    letter-spacing -0.02em
+  - H2 (section titles): 18px, font-weight 600
+  - Body: 14px, line-height 1.5
+  - Small/meta text: 12px, color --text-muted
+  - Numbers/currency (₹ amounts): use tabular-nums for alignment in the
+    table, font-weight 600 to make recovered amounts scannable
+
+---------------------------------------------------------------
+7. WHY THESE CHOICES FIT THE PROJECT
+---------------------------------------------------------------
+- Dark, structured, low-saturation base = "compliance/audit tool," not
+  "flashy AI toy" — matches the project's core pitch of a bounded,
+  deterministic Policy Engine that judges should trust.
+- Status color-coding (green/amber/red/gray) mirrors the five case states
+  in your own workflow (Recovered / In Progress / Escalated /
+  Unrecoverable) so the UI visually reinforces the audit-trail concept.
+- A single accent blue (not a gradient or multiple brand colors) keeps
+  focus on data, since the product's differentiator is measurable
+  recovered revenue, not visual flair.
+- The guardrail badge gets its own treatment because "Guardrails
+  enforced" is your single strongest judging-criteria hook — it should
+  visually stand out from generic nav/status elements.
+
+---------------------------------------------------------------
+END OF SPEC
+---------------------------------------------------------------

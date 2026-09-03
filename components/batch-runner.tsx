@@ -5,7 +5,6 @@ import {
   Play,
   RefreshCw,
   Trash2,
-  Zap,
   CheckCircle2,
   ShieldAlert,
 } from "lucide-react";
@@ -61,7 +60,7 @@ export function BatchRunner({
       } else {
         const r = data.results;
         showStatus(
-          `${r.processed} cases processed  •  ${r.payment_link_sent} Razorpay links created  •  ${r.smart_retry} smart retries  •  ${r.escalated} escalated  •  ${r.skipped_economic_floor + r.unrecoverable} safety stops`,
+          `${r.processed} cases processed  •  ${r.payment_link_sent} links created  •  ${r.smart_retry} smart retries  •  ${r.escalated} escalated  •  ${r.skipped_economic_floor + r.unrecoverable} safety stops`,
           "success"
         );
         onBatchCompleted();
@@ -91,129 +90,128 @@ export function BatchRunner({
 
   return (
     <>
-      <div className="mt-6 py-5 px-6 rounded-2xl bg-[#111827] border border-[#374151]/60 shadow-sm space-y-4">
-        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
-          {/* Title Block (Left icon + title aligned center, 12px gap) */}
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
-              <Zap className="w-5 h-5 text-blue-400" />
-            </div>
-            <div>
-              <h2 className="text-[15px] font-bold text-white tracking-tight leading-tight">
-                Execute Recovery Pipeline
-              </h2>
-              <p className="text-xs text-zinc-400 opacity-75 mt-1 max-w-[520px] leading-normal">
-                Ingest synthetic payment failures, classify root cause via deterministic rules or Groq AI, then apply policy guardrails and create Razorpay Test Mode recovery links.
-              </p>
-            </div>
-          </div>
-
-          {/* Right side controls (Batch dropdown + Run button + Trash, aligned center) */}
-          <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 w-full lg:w-auto shrink-0">
-            {/* Batch Size Dropdown (38px height) */}
-            <div className="h-[38px] flex items-center gap-2 bg-[#0B0F19] border border-[#374151]/80 rounded-xl px-3 text-sm">
-              <span className="text-xs text-zinc-500 whitespace-nowrap">Batch:</span>
-              <select
-                value={batchSize}
-                onChange={(e) => setBatchSize(Number(e.target.value))}
-                disabled={loading}
-                className="bg-transparent text-sm text-white focus:outline-none cursor-pointer"
-              >
-                <option value={10} className="bg-[#111827]">10 cases</option>
-                <option value={20} className="bg-[#111827]">20 cases</option>
-                <option value={50} className="bg-[#111827]">50 cases</option>
-              </select>
-            </div>
-
-            {/* Run Button (height 38px, px-5, gap 12px from dropdown, translateY -1px on hover) */}
-            <button
-              onClick={handleRunBatch}
-              disabled={loading || killSwitchActive}
-              className={`h-[38px] flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 rounded-xl text-sm font-bold shadow-lg transition-all duration-150 ease-out hover:-translate-y-px ${
-                killSwitchActive
-                  ? "bg-[#1F2937] text-zinc-500 cursor-not-allowed border border-[#374151]"
-                  : loading
-                  ? "bg-blue-700 text-white cursor-wait"
-                  : "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-blue-700/25 hover:shadow-blue-700/40 active:translate-y-0"
-              }`}
-            >
-              {loading ? (
-                <>
-                  <RefreshCw className="w-4 h-4 animate-spin" />
-                  <span>Running Pipeline…</span>
-                </>
-              ) : (
-                <>
-                  <Play className="w-4 h-4 fill-current" />
-                  <span>Run Batch Recovery</span>
-                </>
-              )}
-            </button>
-
-            {/* Reset Button (gap 8px from Run button) */}
-            <button
-              onClick={() => setResetConfirmOpen(true)}
-              disabled={resetting || loading}
-              title="Clear all demo cases"
-              className="h-[38px] w-[38px] flex items-center justify-center rounded-xl bg-[#1F2937] hover:bg-rose-500/15 hover:text-rose-400 text-zinc-400 border border-[#374151]/60 transition-all duration-150 ease-out hover:-translate-y-px disabled:opacity-40 disabled:hover:translate-y-0 shrink-0"
-            >
-              {resetting ? (
-                <RefreshCw className="w-4 h-4 animate-spin" />
-              ) : (
-                <Trash2 className="w-4 h-4" />
-              )}
-            </button>
-          </div>
+      {/* ── "Execute Recovery Pipeline" Card (padding: 24px, rounded-12px, bg-[#121826], border: 1px solid rgba(38,48,69,0.4)) ── */}
+      <div className="p-6 rounded-[12px] bg-[#121826] border border-[rgba(38,48,69,0.4)] shadow-sm">
+        {/* Title */}
+        <div className="flex items-center justify-between">
+          <h2 className="text-[16px] font-semibold text-[#F4F6FA] mb-2 leading-none">
+            Execute Recovery Pipeline
+          </h2>
+          <button
+            onClick={() => setResetConfirmOpen(true)}
+            disabled={resetting || loading}
+            title="Clear all demo cases"
+            className="p-1.5 rounded-[6px] hover:bg-[#1A2233] text-[#5B6B85] hover:text-[#EF4444] transition-colors disabled:opacity-40"
+          >
+            {resetting ? (
+              <RefreshCw className="w-4 h-4 animate-spin" />
+            ) : (
+              <Trash2 className="w-4 h-4" />
+            )}
+          </button>
         </div>
 
-        {/* Status Banner */}
+        {/* Description (max-width: 640px, font-size: 14px, color: #94A3B8, line-height: 1.5, margin-bottom: 20px) */}
+        <p className="text-[14px] text-[#94A3B8] leading-[1.5] max-w-[640px] mb-5">
+          Ingest synthetic payment failures, classify root cause via deterministic rules or Groq AI, then apply policy guardrails and create Razorpay Test Mode recovery links.
+        </p>
+
+        {/* Batch Size Selector & Run Button */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-1">
+          {/* Segmented Pill Buttons for Batch Size (10 / 20 / 50 cases) */}
+          <div className="flex items-center gap-2">
+            <span className="text-[13px] text-[#5B6B85] font-medium mr-1">
+              Batch size:
+            </span>
+            {[10, 20, 50].map((size) => {
+              const isSelected = batchSize === size;
+              return (
+                <button
+                  key={size}
+                  type="button"
+                  onClick={() => setBatchSize(size)}
+                  disabled={loading}
+                  className={`px-4 py-2 rounded-[8px] text-[13px] font-medium transition-all ${
+                    isSelected
+                      ? "bg-[#4F7CFF] text-white font-semibold shadow-sm"
+                      : "bg-[#1A2233] text-[#94A3B8] hover:text-[#F4F6FA] hover:bg-[#202B40]"
+                  }`}
+                >
+                  {size} cases
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Run Batch Recovery Button (padding: 12px 24px, rounded-8px, bg-[#4F7CFF], 14px font-weight: 600) */}
+          <button
+            onClick={handleRunBatch}
+            disabled={loading || killSwitchActive}
+            className={`w-full sm:w-auto px-6 py-3 rounded-[8px] text-[14px] font-semibold text-white transition-all flex items-center justify-center gap-2 ${
+              killSwitchActive
+                ? "bg-[#2E3A52] text-[#94A3B8] cursor-not-allowed"
+                : loading
+                ? "bg-[#4F7CFF]/70 cursor-wait"
+                : "bg-[#4F7CFF] hover:bg-[#6B91FF] active:scale-[0.99] shadow-md shadow-[#4F7CFF]/20"
+            }`}
+          >
+            {loading ? (
+              <>
+                <RefreshCw className="w-4 h-4 animate-spin" />
+                <span>Running Pipeline…</span>
+              </>
+            ) : (
+              <>
+                <Play className="w-4 h-4 fill-current" />
+                <span>Run Batch Recovery</span>
+              </>
+            )}
+          </button>
+        </div>
+
+        {/* Status Notification */}
         {statusMessage && statusType !== "idle" && (
           <div
-            className={`p-3.5 rounded-xl flex items-start gap-3 border text-sm transition-all ${
+            className={`mt-4 p-3.5 rounded-[8px] flex items-start gap-2.5 text-[13px] border ${
               statusType === "error"
-                ? "bg-rose-500/8 border-rose-500/25 text-rose-300"
+                ? "bg-[rgba(239,68,68,0.1)] border-[rgba(239,68,68,0.3)] text-[#EF4444]"
                 : statusType === "success"
-                ? "bg-emerald-500/8 border-emerald-500/25 text-emerald-300"
-                : "bg-blue-500/8 border-blue-500/25 text-blue-300"
+                ? "bg-[rgba(34,197,94,0.1)] border-[rgba(34,197,94,0.3)] text-[#22C55E]"
+                : "bg-[rgba(79,124,255,0.1)] border-[rgba(79,124,255,0.3)] text-[#4F7CFF]"
             }`}
           >
             {statusType === "error" ? (
-              <ShieldAlert className="w-4 h-4 shrink-0 mt-0.5 text-rose-400" />
+              <ShieldAlert className="w-4 h-4 shrink-0 mt-0.5" />
             ) : statusType === "loading" ? (
-              <RefreshCw className="w-4 h-4 shrink-0 mt-0.5 text-blue-400 animate-spin" />
+              <RefreshCw className="w-4 h-4 shrink-0 mt-0.5 animate-spin" />
             ) : (
-              <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5 text-emerald-400" />
+              <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
             )}
-            <span className="leading-relaxed text-xs">{statusMessage}</span>
+            <span className="leading-normal">{statusMessage}</span>
           </div>
         )}
       </div>
 
       {/* Reset Confirmation Modal */}
       {resetConfirmOpen && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="w-full max-w-sm bg-[#111827] border border-[#374151] rounded-2xl p-6 space-y-4 shadow-2xl">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center">
-                <Trash2 className="w-5 h-5 text-rose-400" />
-              </div>
-              <h4 className="text-base font-bold text-white">Clear All Demo Cases?</h4>
-            </div>
-            <p className="text-sm text-zinc-400 leading-relaxed">
-              This will permanently delete all current payment cases and audit logs from the demo. This action cannot be undone.
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-sm bg-[#121826] border border-[#2E3A52] rounded-[12px] p-6 space-y-4 shadow-2xl">
+            <h4 className="text-[16px] font-semibold text-[#F4F6FA]">Clear All Demo Cases?</h4>
+            <p className="text-[13px] text-[#94A3B8] leading-relaxed">
+              This will reset the demo data and clear all cases and audit logs.
             </p>
-            <div className="flex items-center gap-3 pt-1">
+            <div className="flex items-center gap-3 pt-2">
               <button
                 onClick={() => setResetConfirmOpen(false)}
-                className="flex-1 px-4 py-2.5 rounded-xl bg-[#1F2937] hover:bg-[#374151] text-sm font-semibold text-zinc-300 transition-colors"
+                className="flex-1 py-2 px-4 rounded-[8px] bg-[#1A2233] hover:bg-[#202B40] text-[13px] font-medium text-[#94A3B8] transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleResetData}
-                className="flex-1 px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-sm font-bold text-white transition-colors"
+                className="flex-1 py-2 px-4 rounded-[8px] bg-[#EF4444] hover:bg-[#EF4444]/90 text-[13px] font-semibold text-white transition-colors"
               >
-                Yes, Clear All
+                Clear All
               </button>
             </div>
           </div>

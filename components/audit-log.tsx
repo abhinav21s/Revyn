@@ -8,7 +8,7 @@ import {
   RefreshCw,
   ChevronRight,
   Code,
-  FileSpreadsheet,
+  Inbox,
 } from "lucide-react";
 
 interface AuditLogViewerProps {
@@ -17,31 +17,14 @@ interface AuditLogViewerProps {
   onRefresh?: () => void;
 }
 
-// Skeleton row
-function SkeletonAuditRow() {
-  return (
-    <tr className="border-b border-[#374151]/40 h-[54px]">
-      {[1, 2, 3, 4, 5, 6, 7].map((i) => (
-        <td key={i} className="py-2.5 px-5">
-          <div
-            className={`h-3 rounded-full bg-[#374151]/60 animate-pulse ${
-              i === 1 ? "w-16" : i === 2 ? "w-28" : i === 3 ? "w-40" : "w-20"
-            }`}
-          />
-        </td>
-      ))}
-    </tr>
-  );
-}
-
 const STEP_COLORS: Record<string, string> = {
-  DETECT: "bg-zinc-700/60 text-zinc-300 border-zinc-600",
-  DIAGNOSE: "bg-indigo-500/10 text-indigo-300 border-indigo-500/25",
-  DECIDE: "bg-blue-500/10 text-blue-300 border-blue-500/25",
-  EXECUTE: "bg-amber-500/10 text-amber-300 border-amber-500/25",
-  RECOVERED: "bg-emerald-500/10 text-emerald-300 border-emerald-500/25",
-  SETTINGS: "bg-rose-500/10 text-rose-300 border-rose-500/25",
-  WEBHOOK: "bg-purple-500/10 text-purple-300 border-purple-500/25",
+  DETECT: "bg-[#1A2233] text-[#94A3B8] border-[#2E3A52]",
+  DIAGNOSE: "bg-[rgba(79,124,255,0.15)] text-[#4F7CFF] border-[rgba(79,124,255,0.3)]",
+  DECIDE: "bg-[rgba(79,124,255,0.15)] text-[#4F7CFF] border-[rgba(79,124,255,0.3)]",
+  EXECUTE: "bg-[rgba(245,158,11,0.15)] text-[#F59E0B] border-[rgba(245,158,11,0.3)]",
+  RECOVERED: "bg-[rgba(34,197,94,0.15)] text-[#22C55E] border-[rgba(34,197,94,0.3)]",
+  SETTINGS: "bg-[rgba(239,68,68,0.15)] text-[#EF4444] border-[rgba(239,68,68,0.3)]",
+  WEBHOOK: "bg-[rgba(79,124,255,0.15)] text-[#4F7CFF] border-[rgba(79,124,255,0.3)]",
 };
 
 export function AuditLogViewer({
@@ -75,169 +58,175 @@ export function AuditLogViewer({
   });
 
   return (
-    <div className="rounded-2xl bg-[#111827] border border-[#374151]/60 shadow-sm overflow-hidden">
-      {/* ── Controls (Filter tabs: 28px height, 8px gap) ──────── */}
-      <div className="px-5 py-3.5 border-b border-[#374151]/60 flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
-        <div className="flex items-center gap-2 overflow-x-auto pb-0.5 sm:pb-0 w-full sm:w-auto">
+    <div className="w-full">
+      {/* ── Controls (Filter tabs + Search input) ── */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 py-4 border-b border-[rgba(38,48,69,0.4)] mb-4">
+        {/* Step Filter Tabs */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 md:pb-0">
           {steps.map((st) => (
             <button
               key={st.value}
               onClick={() => setStepFilter(st.value)}
-              className={`h-[28px] flex items-center px-3 rounded-lg text-xs font-semibold whitespace-nowrap transition-all duration-150 ${
+              className={`px-3.5 py-1.5 rounded-[8px] text-[13px] font-medium transition-colors border whitespace-nowrap ${
                 stepFilter === st.value
-                  ? "bg-blue-600 text-white border border-blue-500 shadow-sm"
-                  : "bg-[#1F2937]/70 text-zinc-400 hover:text-zinc-200 hover:bg-[#1F2937] border border-transparent"
+                  ? "bg-[rgba(79,124,255,0.15)] text-[#4F7CFF] border-[rgba(79,124,255,0.3)] font-semibold"
+                  : "bg-transparent text-[#94A3B8] border-transparent hover:bg-[#1A2233]"
               }`}
             >
               {st.label}
             </button>
           ))}
         </div>
-        <div className="flex items-center gap-2 w-full sm:w-auto">
-          <div className="relative flex-1 sm:w-64">
-            <Search className="w-4 h-4 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+
+        {/* Search input + Refresh */}
+        <div className="flex items-center gap-2 w-full md:w-auto">
+          <div className="relative flex-1 md:w-[300px]">
+            <Search className="w-4 h-4 text-[#5B6B85] absolute left-3 top-3 pointer-events-none" />
             <input
               type="text"
               placeholder="Search actions, reasons, rules…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="h-[36px] w-full bg-[#0B0F19] border border-[#374151]/80 rounded-lg pl-9 pr-3 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-150"
+              className="h-[40px] w-full bg-[#121826] border border-[#2E3A52] rounded-[8px] pl-10 pr-4 text-[13px] text-[#F4F6FA] placeholder-[#5B6B85] focus:outline-none focus:border-[#4F7CFF] focus:ring-2 focus:ring-[rgba(79,124,255,0.2)] transition-all"
             />
           </div>
           {onRefresh && (
             <button
               onClick={onRefresh}
               disabled={loading}
-              className="h-[36px] px-2.5 rounded-lg bg-[#1F2937] hover:bg-[#374151] text-zinc-400 hover:text-zinc-200 border border-[#374151]/60 transition-all duration-150 flex items-center justify-center shrink-0"
+              className="h-[40px] w-[40px] rounded-[8px] bg-[#121826] border border-[#2E3A52] hover:bg-[#1A2233] text-[#94A3B8] hover:text-[#F4F6FA] flex items-center justify-center shrink-0 transition-colors"
               title="Refresh logs"
             >
-              <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin text-blue-400" : ""}`} />
+              <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin text-[#4F7CFF]" : ""}`} />
             </button>
           )}
         </div>
       </div>
 
-      {/* ── Table (horizontal scroll with 8px padding bottom) ─── */}
-      <div className="overflow-x-auto pb-2">
-        <table className="w-full text-left">
-          <thead>
-            <tr className="border-b border-[#374151]/60 bg-[#1F2937]">
-              <th className="py-3 px-5 text-[11px] font-semibold text-zinc-300 opacity-70 uppercase tracking-[0.5px]">Step</th>
-              <th className="py-3 px-5 text-[11px] font-semibold text-zinc-300 opacity-70 uppercase tracking-[0.5px]">Action</th>
-              <th className="py-3 px-5 text-[11px] font-semibold text-zinc-300 opacity-70 uppercase tracking-[0.5px]">Reason</th>
-              <th className="py-3 px-5 text-[11px] font-semibold text-zinc-300 opacity-70 uppercase tracking-[0.5px]">Policy Rule</th>
-              <th className="py-3 px-5 text-[11px] font-semibold text-zinc-300 opacity-70 uppercase tracking-[0.5px]">Actor</th>
-              <th className="py-3 px-5 text-[11px] font-semibold text-zinc-300 opacity-70 uppercase tracking-[0.5px] whitespace-nowrap">Timestamp</th>
-              <th className="py-3 px-5 text-right text-[11px] font-semibold text-zinc-300 opacity-70 uppercase tracking-[0.5px]">Details</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              <>
-                <SkeletonAuditRow />
-                <SkeletonAuditRow />
-                <SkeletonAuditRow />
-                <SkeletonAuditRow />
-                <SkeletonAuditRow />
-              </>
-            ) : filteredLogs.length === 0 ? (
-              <tr>
-                <td colSpan={7} className="py-16 px-5">
-                  <div className="flex flex-col items-center justify-center gap-4 text-center max-w-xs mx-auto">
-                    <div className="w-14 h-14 rounded-2xl bg-[#1F2937] border border-[#374151]/60 flex items-center justify-center">
-                      <FileSpreadsheet className="w-7 h-7 text-zinc-500" />
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-sm font-semibold text-zinc-200">
-                        {search || stepFilter !== "all" ? "No logs match your filter" : "Audit ledger is empty"}
-                      </p>
-                      <p className="text-xs text-zinc-400 opacity-75 leading-relaxed">
-                        {search || stepFilter !== "all"
-                          ? "Try clearing the search or switching the step filter."
-                          : "Run a recovery batch to start generating immutable audit entries."}
-                      </p>
-                    </div>
-                  </div>
-                </td>
+      {/* ── Table ── */}
+      <div className="rounded-[12px] bg-[#121826] border border-[rgba(38,48,69,0.4)] overflow-hidden shadow-sm">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-[#1A2233] border-b border-[#2E3A52]">
+                <th className="py-3 px-4 text-[12px] font-semibold text-[#5B6B85] uppercase tracking-[0.04em]">Step</th>
+                <th className="py-3 px-4 text-[12px] font-semibold text-[#5B6B85] uppercase tracking-[0.04em]">Action</th>
+                <th className="py-3 px-4 text-[12px] font-semibold text-[#5B6B85] uppercase tracking-[0.04em]">Reason</th>
+                <th className="py-3 px-4 text-[12px] font-semibold text-[#5B6B85] uppercase tracking-[0.04em]">Policy Rule</th>
+                <th className="py-3 px-4 text-[12px] font-semibold text-[#5B6B85] uppercase tracking-[0.04em]">Actor</th>
+                <th className="py-3 px-4 text-[12px] font-semibold text-[#5B6B85] uppercase tracking-[0.04em] whitespace-nowrap">Timestamp</th>
+                <th className="py-3 px-4 text-right text-[12px] font-semibold text-[#5B6B85] uppercase tracking-[0.04em]">Details</th>
               </tr>
-            ) : (
-              filteredLogs.map((log) => {
-                const isExpanded = expandedId === log.id;
-                const stepColor = STEP_COLORS[log.step] || "bg-zinc-700/60 text-zinc-300 border-zinc-600";
-                return (
-                  <React.Fragment key={log.id}>
-                    <tr
-                      onClick={() => setExpandedId(isExpanded ? null : log.id)}
-                      className="h-[54px] border-b border-[#374151]/30 hover:bg-[#1F2937]/40 cursor-pointer transition-colors duration-[120ms] ease-in-out group"
-                    >
-                      {/* Consistent width STEP badge (84px, centered) */}
-                      <td className="py-2.5 px-5">
-                        <span className={`w-[84px] h-[22px] inline-flex items-center justify-center rounded-md text-[10px] font-bold border font-mono ${stepColor}`}>
-                          {log.step}
-                        </span>
-                      </td>
-                      <td className="py-2.5 px-5 text-sm font-semibold text-white max-w-[180px] truncate leading-tight">
-                        {log.action}
-                      </td>
-                      {/* 2-line clamp with tooltip on hover */}
-                      <td className="py-2.5 px-5 text-xs text-zinc-300 max-w-[280px]" title={log.reason}>
-                        <span className="line-clamp-2 leading-tight">{log.reason}</span>
-                      </td>
-                      <td className="py-2.5 px-5">
-                        {log.policy_rule ? (
-                          <span className="font-mono text-blue-400 text-xs bg-blue-500/8 border border-blue-500/20 px-2 py-0.5 rounded-md">
-                            {log.policy_rule}
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr>
+                  <td colSpan={7} className="py-12 text-center text-[#5B6B85] text-[13px]">
+                    Loading audit trail…
+                  </td>
+                </tr>
+              ) : filteredLogs.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="py-12 px-4 text-center">
+                    <div className="flex flex-col items-center justify-center gap-2">
+                      <Inbox className="w-8 h-8 text-[#5B6B85]" />
+                      <p className="text-[14px] text-[#5B6B85]">
+                        {search || stepFilter !== "all"
+                          ? "No audit records match your filter criteria"
+                          : "Audit ledger is empty — run a recovery batch to generate immutable records"}
+                      </p>
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                filteredLogs.map((log) => {
+                  const isExpanded = expandedId === log.id;
+                  const stepColor = STEP_COLORS[log.step] || "bg-[#1A2233] text-[#94A3B8] border-[#2E3A52]";
+                  return (
+                    <React.Fragment key={log.id}>
+                      <tr
+                        onClick={() => setExpandedId(isExpanded ? null : log.id)}
+                        className="border-b border-[rgba(38,48,69,0.4)] hover:bg-[#202B40] cursor-pointer transition-colors text-[13px]"
+                      >
+                        {/* Step badge */}
+                        <td className="py-3 px-4">
+                          <span className={`w-[84px] py-0.5 rounded-[4px] inline-flex items-center justify-center text-[11px] font-mono font-semibold border ${stepColor}`}>
+                            {log.step}
                           </span>
-                        ) : (
-                          <span className="text-zinc-600 text-xs">—</span>
-                        )}
-                      </td>
-                      <td className="py-2.5 px-5 text-xs text-zinc-400 font-mono">{log.actor}</td>
-                      <td className="py-2.5 px-5 text-[11px] text-zinc-400 whitespace-nowrap">
-                        {formatDate(log.created_at)}
-                      </td>
-                      <td className="py-2.5 px-5 text-right">
-                        {/* 16px chevron rotating 90deg on open with 150ms transition */}
-                        <div className="inline-flex items-center justify-center w-[28px] h-[28px] rounded-md text-zinc-400 hover:text-zinc-100 hover:bg-white/5 transition-colors">
-                          <ChevronRight
-                            className={cn(
-                              "w-4 h-4 transition-transform duration-150 ease-out",
-                              isExpanded && "rotate-90"
-                            )}
-                          />
-                        </div>
-                      </td>
-                    </tr>
+                        </td>
 
-                    {/* Expanded JSON Inspector */}
-                    {isExpanded && (
-                      <tr className="bg-[#0B0F19]/80">
-                        <td colSpan={7} className="px-5 py-4 border-b border-[#374151]/40">
-                          <div className="space-y-2.5">
-                            <div className="flex items-center gap-2 text-xs font-semibold text-zinc-300">
-                              <Code className="w-3.5 h-3.5 text-blue-400" />
-                              <span>Audit Entry Details</span>
-                              <span className="text-[10px] font-mono text-zinc-500 ml-1">ID: {log.id}</span>
-                            </div>
-                            <p className="text-xs text-zinc-300 leading-relaxed">
-                              <span className="text-zinc-500">Full Reason: </span>
-                              {log.reason}
-                            </p>
-                            {log.metadata && (
-                              <pre className="p-3.5 rounded-xl bg-[#070A12] border border-[#374151]/60 text-[11px] font-mono text-emerald-400/90 overflow-x-auto leading-relaxed">
-                                {JSON.stringify(log.metadata, null, 2)}
-                              </pre>
-                            )}
-                          </div>
+                        {/* Action */}
+                        <td className="py-3 px-4 font-medium text-[#F4F6FA] max-w-[180px] truncate">
+                          {log.action}
+                        </td>
+
+                        {/* Reason with 2-line clamp and tooltip */}
+                        <td className="py-3 px-4 text-[#94A3B8] max-w-[280px]" title={log.reason}>
+                          <span className="line-clamp-2 leading-snug">{log.reason}</span>
+                        </td>
+
+                        {/* Policy Rule */}
+                        <td className="py-3 px-4">
+                          {log.policy_rule ? (
+                            <span className="font-mono text-[#4F7CFF] text-[11px] bg-[rgba(79,124,255,0.1)] border border-[rgba(79,124,255,0.25)] px-2 py-0.5 rounded-[4px]">
+                              {log.policy_rule}
+                            </span>
+                          ) : (
+                            <span className="text-[#5B6B85] text-xs">—</span>
+                          )}
+                        </td>
+
+                        {/* Actor */}
+                        <td className="py-3 px-4 text-[#5B6B85] text-[12px] font-mono">{log.actor}</td>
+
+                        {/* Timestamp */}
+                        <td className="py-3 px-4 text-[#94A3B8] text-[12px] whitespace-nowrap">
+                          {formatDate(log.created_at)}
+                        </td>
+
+                        {/* Details Chevron */}
+                        <td className="py-3 px-4 text-right">
+                          <button className="w-7 h-7 rounded-[6px] hover:bg-[#1A2233] text-[#94A3B8] hover:text-[#F4F6FA] inline-flex items-center justify-center transition-colors">
+                            <ChevronRight
+                              className={cn(
+                                "w-4 h-4 transition-transform duration-150",
+                                isExpanded && "rotate-90"
+                              )}
+                            />
+                          </button>
                         </td>
                       </tr>
-                    )}
-                  </React.Fragment>
-                );
-              })
-            )}
-          </tbody>
-        </table>
+
+                      {/* Expanded JSON Inspector */}
+                      {isExpanded && (
+                        <tr className="bg-[#0B0F19]">
+                          <td colSpan={7} className="px-6 py-4 border-b border-[#2E3A52]">
+                            <div className="space-y-2">
+                              <div className="flex items-center gap-2 text-[12px] font-medium text-[#94A3B8]">
+                                <Code className="w-3.5 h-3.5 text-[#4F7CFF]" />
+                                <span>Audit Metadata Record</span>
+                                <span className="text-[10px] font-mono text-[#5B6B85] ml-1">ID: {log.id}</span>
+                              </div>
+                              <p className="text-[13px] text-[#F4F6FA] leading-relaxed">
+                                <span className="text-[#5B6B85]">Full Reason: </span>
+                                {log.reason}
+                              </p>
+                              {log.metadata && (
+                                <pre className="p-3 rounded-[8px] bg-[#121826] border border-[#2E3A52] text-[11px] font-mono text-[#22C55E] overflow-x-auto leading-relaxed">
+                                  {JSON.stringify(log.metadata, null, 2)}
+                                </pre>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

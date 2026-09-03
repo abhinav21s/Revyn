@@ -1,5 +1,5 @@
 import React from "react";
-import { Sidebar } from "@/components/sidebar";
+import { Header } from "@/components/header";
 
 export default function DashboardLayout({
   children,
@@ -7,16 +7,14 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex min-h-screen bg-[#0B0F19] text-white">
-      {/* Persistent Sidebar */}
-      <Sidebar />
+    <div className="min-h-screen bg-[#0B0F19] text-[#F4F6FA] flex flex-col">
+      {/* 2-Row Fintech Header (Row 1: 64px, Row 2: 44px) */}
+      <Header />
 
-      {/* Main scrollable content area */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-x-hidden">
-        <main className="flex-1 px-7 md:px-8 py-6 md:py-8 space-y-6 md:space-y-8 max-w-[1400px] w-full mx-auto">
-          {children}
-        </main>
-      </div>
+      {/* Centered Page Container (max-width: 1280px, centered, 32px desktop padding, 16px mobile) */}
+      <main className="flex-1 w-full max-w-[1280px] mx-auto px-4 md:px-8 pt-10 pb-12">
+        {children}
+      </main>
     </div>
   );
 }

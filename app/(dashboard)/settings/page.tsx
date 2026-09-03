@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { TopBar } from "@/components/top-bar";
 import { KillSwitchControl } from "@/components/kill-switch";
 import {
   ShieldCheck,
@@ -49,47 +48,41 @@ export default function SettingsPage() {
   const policyRules = [
     {
       icon: RotateCcw,
-      color: "blue",
       title: "Max Retry Limit",
       value: "3 attempts",
       desc: "Any case reaching 3 retries is immediately escalated to human review to prevent customer fatigue and compliance issues.",
     },
     {
       icon: TrendingDown,
-      color: "amber",
       title: "Economic Floor",
       value: "₹10.00 minimum",
       desc: "Payments below the floor are marked unrecoverable to ensure recovery costs never exceed the recovered value.",
     },
     {
       icon: Ban,
-      color: "rose",
       title: "Mandate Hard Stop",
       value: "Revoked / Expired",
       desc: "Cancelled or expired UPI AutoPay mandates are never automatically retried, in compliance with RBI guidelines.",
     },
     {
       icon: Calendar,
-      color: "emerald",
       title: "Salary Day Window",
       value: "Days 1–5 of month",
       desc: "Insufficient balance cases in salary periods use a rapid 2-hour retry window instead of the standard 24-hour delay.",
     },
   ];
 
-  const colorMap: Record<string, { icon: string; border: string; bg: string }> = {
-    blue: { icon: "text-blue-400", border: "border-blue-500/20", bg: "bg-blue-500/8" },
-    amber: { icon: "text-amber-400", border: "border-amber-500/20", bg: "bg-amber-500/8" },
-    rose: { icon: "text-rose-400", border: "border-rose-500/20", bg: "bg-rose-500/8" },
-    emerald: { icon: "text-emerald-400", border: "border-emerald-500/20", bg: "bg-emerald-500/8" },
-  };
-
   return (
-    <div className="space-y-6 md:space-y-8">
-      <TopBar
-        title="Settings & Safety Guardrails"
-        subtitle="Policy rules, emergency kill switch, and gateway connection status"
-      />
+    <div className="space-y-6">
+      {/* Title */}
+      <div>
+        <h1 className="text-[28px] font-bold text-[#F4F6FA] tracking-[-0.02em] leading-tight">
+          Settings & Safety Guardrails
+        </h1>
+        <p className="text-[14px] text-[#94A3B8] leading-[1.5] mt-1">
+          Configure safety parameters, emergency kill switch, and view API integration health.
+        </p>
+      </div>
 
       {/* Emergency Kill Switch */}
       <KillSwitchControl
@@ -97,54 +90,50 @@ export default function SettingsPage() {
         onStateChanged={(val) => setKillSwitchActive(val)}
       />
 
-      {/* Policy Engine Rules */}
-      <div className="p-6 rounded-2xl bg-[#111827] border border-[#374151]/60 shadow-sm space-y-4">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+      {/* Deterministic Policy Engine Rules */}
+      <div className="p-6 rounded-[12px] bg-[#121826] border border-[rgba(38,48,69,0.4)] shadow-sm space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
-              <Lock className="w-5 h-5 text-blue-400" />
+            <div className="w-10 h-10 rounded-[8px] bg-[rgba(79,124,255,0.1)] border border-[rgba(79,124,255,0.25)] flex items-center justify-center">
+              <Lock className="w-5 h-5 text-[#4F7CFF]" />
             </div>
             <div>
-              <h3 className="text-[15px] font-bold text-white tracking-tight">
+              <h3 className="text-[16px] font-semibold text-[#F4F6FA] tracking-tight">
                 Deterministic Policy Engine Rules
               </h3>
-              <p className="text-xs text-zinc-500 mt-0.5">
-                Hard-coded TypeScript guardrails — the LLM has zero authority over these
+              <p className="text-[13px] text-[#94A3B8]">
+                Bounded execution: Groq LLM has zero authority over financial actions
               </p>
             </div>
           </div>
-          <span className="shrink-0 text-xs px-3 py-1.5 rounded-full bg-blue-500/10 text-blue-400 font-semibold border border-blue-500/20">
-            Immutable · TypeScript
+          <span className="self-start sm:self-auto text-[11px] font-mono font-medium px-2.5 py-1 rounded-[6px] bg-[rgba(79,124,255,0.1)] text-[#4F7CFF] border border-[rgba(79,124,255,0.25)]">
+            TypeScript · Deterministic
           </span>
         </div>
 
-        <p className="text-xs text-zinc-400 opacity-75 leading-relaxed">
-          Groq AI (Llama 3.3 70B) is strictly isolated to root-cause classification only.
-          All money-moving decisions — retries, payment links, escalations — are governed entirely by these deterministic rules:
+        <p className="text-[13px] text-[#94A3B8] leading-relaxed">
+          Groq AI (Llama 3.3 70B) is strictly sandboxed to root-cause diagnosis. All decisions (retries, payment links, human escalations) are enforced by hardcoded policy rules:
         </p>
 
-        {/* 2x2 Grid with 16px gap, each card 16px padding */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {/* 2x2 Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
           {policyRules.map((rule) => {
             const Icon = rule.icon;
-            const c = colorMap[rule.color];
             return (
               <div
                 key={rule.title}
-                className={`p-4 rounded-xl bg-[#0B0F19] border ${c.border} flex flex-col justify-between`}
+                className="p-4 rounded-[8px] bg-[#0B0F19] border border-[#2E3A52] flex flex-col justify-between"
               >
-                <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <div className="flex items-center gap-2">
-                      <Icon className={`w-4 h-4 ${c.icon}`} />
-                      <span className="text-sm font-semibold text-zinc-200">{rule.title}</span>
-                    </div>
-                    <span className={`text-[11px] font-bold font-mono ${c.icon} ${c.bg} px-2 py-0.5 rounded-md border ${c.border}`}>
-                      {rule.value}
-                    </span>
+                <div className="flex items-center justify-between mb-1.5">
+                  <div className="flex items-center gap-2">
+                    <Icon className="w-4 h-4 text-[#4F7CFF]" />
+                    <span className="text-[14px] font-medium text-[#F4F6FA]">{rule.title}</span>
                   </div>
+                  <span className="text-[11px] font-mono font-semibold text-[#4F7CFF] bg-[rgba(79,124,255,0.1)] border border-[rgba(79,124,255,0.25)] px-2 py-0.5 rounded-[4px]">
+                    {rule.value}
+                  </span>
                 </div>
-                <p className="text-xs text-zinc-400 opacity-75 leading-relaxed mt-1">{rule.desc}</p>
+                <p className="text-[12px] text-[#94A3B8] leading-normal mt-1">{rule.desc}</p>
               </div>
             );
           })}
@@ -152,91 +141,84 @@ export default function SettingsPage() {
       </div>
 
       {/* Integration Health */}
-      <div className="p-6 rounded-2xl bg-[#111827] border border-[#374151]/60 shadow-sm space-y-4">
+      <div className="p-6 rounded-[12px] bg-[#121826] border border-[rgba(38,48,69,0.4)] shadow-sm space-y-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
-            <ShieldCheck className="w-5 h-5 text-emerald-400" />
+          <div className="w-10 h-10 rounded-[8px] bg-[#0F2A1C] border border-[rgba(34,197,94,0.3)] flex items-center justify-center">
+            <ShieldCheck className="w-5 h-5 text-[#22C55E]" />
           </div>
           <div>
-            <h3 className="text-[15px] font-bold text-white tracking-tight">
+            <h3 className="text-[16px] font-semibold text-[#F4F6FA] tracking-tight">
               Gateway & AI Integration Health
             </h3>
-            <p className="text-xs text-zinc-500 mt-0.5">Real-time connection status for all external services</p>
+            <p className="text-[13px] text-[#94A3B8]">Live connection status for external systems</p>
           </div>
         </div>
 
-        {/* Three cards with 16px gap, equal height, status badge aligned top-right */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">
           {/* Razorpay */}
-          <div className="p-4 rounded-xl bg-[#0B0F19] border border-[#374151]/60 flex flex-col justify-between h-full">
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <CreditCard className="w-4 h-4 text-blue-400" />
-                  <span className="text-sm font-bold text-white">Razorpay</span>
-                </div>
-                {connections.razorpay ? (
-                  <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/20">
-                    <CheckCircle2 className="w-3 h-3" /> Ready
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-md border border-amber-500/20">
-                    <Info className="w-3 h-3" /> Needs Key
-                  </span>
-                )}
+          <div className="p-4 rounded-[8px] bg-[#0B0F19] border border-[#2E3A52] flex flex-col justify-between">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <CreditCard className="w-4 h-4 text-[#4F7CFF]" />
+                <span className="text-[14px] font-medium text-[#F4F6FA]">Razorpay</span>
               </div>
-              <p className="text-xs text-zinc-400 opacity-75 leading-relaxed">
-                Official Node.js SDK with <code className="text-zinc-300">rzp_test_*</code> credentials only. No live payments.
-              </p>
+              {connections.razorpay ? (
+                <span className="text-[11px] font-medium text-[#22C55E] bg-[rgba(34,197,94,0.1)] border border-[rgba(34,197,94,0.25)] px-2 py-0.5 rounded-[4px] flex items-center gap-1">
+                  <CheckCircle2 className="w-3 h-3" /> Ready
+                </span>
+              ) : (
+                <span className="text-[11px] font-medium text-[#F59E0B] bg-[rgba(245,158,11,0.1)] border border-[rgba(245,158,11,0.25)] px-2 py-0.5 rounded-[4px] flex items-center gap-1">
+                  <Info className="w-3 h-3" /> Test Mode
+                </span>
+              )}
             </div>
+            <p className="text-[12px] text-[#94A3B8] leading-normal">
+              Official SDK initialized with test credentials (<code className="text-[#F4F6FA]">rzp_test_*</code>).
+            </p>
           </div>
 
           {/* Groq AI */}
-          <div className="p-4 rounded-xl bg-[#0B0F19] border border-[#374151]/60 flex flex-col justify-between h-full">
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <Cpu className="w-4 h-4 text-indigo-400" />
-                  <span className="text-sm font-bold text-white">Groq AI</span>
-                </div>
-                {connections.groq ? (
-                  <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/20">
-                    <CheckCircle2 className="w-3 h-3" /> Connected
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-md border border-amber-500/20">
-                    <Info className="w-3 h-3" /> Needs Key
-                  </span>
-                )}
+          <div className="p-4 rounded-[8px] bg-[#0B0F19] border border-[#2E3A52] flex flex-col justify-between">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <Cpu className="w-4 h-4 text-[#4F7CFF]" />
+                <span className="text-[14px] font-medium text-[#F4F6FA]">Groq AI</span>
               </div>
-              <p className="text-xs text-zinc-400 opacity-75 leading-relaxed">
-                Llama 3.3 70B for diagnosis only. Forced JSON schema with zero execution authority.
-              </p>
+              {connections.groq ? (
+                <span className="text-[11px] font-medium text-[#22C55E] bg-[rgba(34,197,94,0.1)] border border-[rgba(34,197,94,0.25)] px-2 py-0.5 rounded-[4px] flex items-center gap-1">
+                  <CheckCircle2 className="w-3 h-3" /> Connected
+                </span>
+              ) : (
+                <span className="text-[11px] font-medium text-[#F59E0B] bg-[rgba(245,158,11,0.1)] border border-[rgba(245,158,11,0.25)] px-2 py-0.5 rounded-[4px] flex items-center gap-1">
+                  <Info className="w-3 h-3" /> Needs Key
+                </span>
+              )}
             </div>
+            <p className="text-[12px] text-[#94A3B8] leading-normal">
+              Llama 3.3 70B Versatile with strict JSON Schema output.
+            </p>
           </div>
 
           {/* Supabase */}
-          <div className="p-4 rounded-xl bg-[#0B0F19] border border-[#374151]/60 flex flex-col justify-between h-full">
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <Database className="w-4 h-4 text-emerald-400" />
-                  <span className="text-sm font-bold text-white">Supabase</span>
-                </div>
-                {connections.supabase ? (
-                  <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/20">
-                    <CheckCircle2 className="w-3 h-3" /> Connected
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-md border border-amber-500/20">
-                    <Info className="w-3 h-3" /> Needs Key
-                  </span>
-                )}
+          <div className="p-4 rounded-[8px] bg-[#0B0F19] border border-[#2E3A52] flex flex-col justify-between">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <Database className="w-4 h-4 text-[#4F7CFF]" />
+                <span className="text-[14px] font-medium text-[#F4F6FA]">Supabase</span>
               </div>
-              <p className="text-xs text-zinc-400 opacity-75 leading-relaxed">
-                PostgreSQL database holding all cases, settings, and the immutable audit ledger.
-              </p>
+              {connections.supabase ? (
+                <span className="text-[11px] font-medium text-[#22C55E] bg-[rgba(34,197,94,0.1)] border border-[rgba(34,197,94,0.25)] px-2 py-0.5 rounded-[4px] flex items-center gap-1">
+                  <CheckCircle2 className="w-3 h-3" /> Connected
+                </span>
+              ) : (
+                <span className="text-[11px] font-medium text-[#F59E0B] bg-[rgba(245,158,11,0.1)] border border-[rgba(245,158,11,0.25)] px-2 py-0.5 rounded-[4px] flex items-center gap-1">
+                  <Info className="w-3 h-3" /> Needs Key
+                </span>
+              )}
             </div>
+            <p className="text-[12px] text-[#94A3B8] leading-normal">
+              PostgreSQL database holding cases, ledger, and state.
+            </p>
           </div>
         </div>
       </div>
