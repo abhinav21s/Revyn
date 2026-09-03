@@ -23,10 +23,7 @@ export const metadata: Metadata = {
     "UPI",
   ],
   icons: {
-    icon: [
-      { url: "/icon.svg", type: "image/svg+xml" },
-      { url: "/favicon.ico", sizes: "any" },
-    ],
+    icon: "/icon.svg",
     apple: "/icon.svg",
   },
   openGraph: {

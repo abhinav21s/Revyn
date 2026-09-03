@@ -10,7 +10,6 @@ import {
   FileSpreadsheet,
   Settings,
   ShieldAlert,
-  Shield,
   CheckCircle2,
   Menu,
   X,
@@ -20,12 +19,12 @@ interface SidebarProps {
   killSwitchActive?: boolean;
 }
 
-// Clean "R" monogram logo as SVG
+// Clean "R" monogram logo as SVG (30x30)
 function RevynLogo() {
   return (
     <svg
-      width="36"
-      height="36"
+      width="30"
+      height="30"
       viewBox="0 0 36 36"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
@@ -37,9 +36,19 @@ function RevynLogo() {
         fill="white"
         fillOpacity="0.95"
       />
-      <path d="M13.5 14.5H19.5C20.3 14.5 21 15.2 21 16C21 16.8 20.3 17.5 19.5 17.5H13.5V14.5Z" fill="url(#revyn-gradient)" />
+      <path
+        d="M13.5 14.5H19.5C20.3 14.5 21 15.2 21 16C21 16.8 20.3 17.5 19.5 17.5H13.5V14.5Z"
+        fill="url(#revyn-gradient)"
+      />
       <defs>
-        <linearGradient id="revyn-gradient" x1="0" y1="0" x2="36" y2="36" gradientUnits="userSpaceOnUse">
+        <linearGradient
+          id="revyn-gradient"
+          x1="0"
+          y1="0"
+          x2="36"
+          y2="36"
+          gradientUnits="userSpaceOnUse"
+        >
           <stop stopColor="#3B82F6" />
           <stop offset="0.5" stopColor="#6366F1" />
           <stop offset="1" stopColor="#10B981" />
@@ -59,38 +68,38 @@ export function Sidebar({ killSwitchActive = false }: SidebarProps) {
   }, [pathname]);
 
   const navigation = [
-    { name: "Dashboard", href: "/", icon: LayoutDashboard, desc: "Overview & metrics" },
-    { name: "Recoveries", href: "/recoveries", icon: Layers, desc: "All payment cases" },
-    { name: "Audit Trail", href: "/audit", icon: FileSpreadsheet, desc: "Immutable ledger" },
-    { name: "Settings & Safety", href: "/settings", icon: Settings, desc: "Guardrails & kill switch" },
+    { name: "Dashboard", href: "/", icon: LayoutDashboard },
+    { name: "Recoveries", href: "/recoveries", icon: Layers },
+    { name: "Audit Trail", href: "/audit", icon: FileSpreadsheet },
+    { name: "Settings & Safety", href: "/settings", icon: Settings },
   ];
 
   const SidebarContent = () => (
     <div className="flex flex-col h-full">
       {/* ── Logo & Brand ─────────────────────────────────────── */}
-      <div className="px-5 py-5 border-b border-[#374151]/60">
+      <div className="px-5 py-4 border-b border-[#374151]/60">
         <div className="flex items-center gap-3">
           <RevynLogo />
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-bold text-xl text-white tracking-tight leading-none">
+              <span className="font-bold text-[16px] text-white tracking-tight leading-none">
                 Revyn
               </span>
-              <span className="px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-blue-500/20 text-blue-400 border border-blue-500/30 leading-none">
+              <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-500/20 text-blue-400 border border-blue-500/30 leading-none">
                 AI
               </span>
             </div>
-            <p className="text-xs text-zinc-400 mt-1 font-medium">
+            <p className="text-[11px] text-zinc-400 mt-1 font-medium leading-none">
               Revenue Recovery Agent
             </p>
           </div>
         </div>
       </div>
 
-      {/* ── Safety Status Banner ─────────────────────────────── */}
-      <div className="px-4 pt-4">
+      {/* ── Safety Status Banner (12px gap below logo block) ─── */}
+      <div className="px-4 pt-3">
         {killSwitchActive ? (
-          <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 flex items-center gap-2.5">
+          <div className="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/30 flex items-center gap-2.5">
             <ShieldAlert className="w-4 h-4 shrink-0 text-rose-400 animate-pulse" />
             <div>
               <span className="text-xs font-bold text-rose-300 block">KILL SWITCH ACTIVE</span>
@@ -98,7 +107,7 @@ export function Sidebar({ killSwitchActive = false }: SidebarProps) {
             </div>
           </div>
         ) : (
-          <div className="p-3 rounded-xl bg-emerald-500/5 border border-emerald-500/20 flex items-center gap-2.5">
+          <div className="p-2.5 rounded-xl bg-emerald-500/5 border border-emerald-500/20 flex items-center gap-2.5">
             <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
             <div>
               <span className="text-xs font-semibold text-emerald-300 block">Policy Engine Active</span>
@@ -108,8 +117,8 @@ export function Sidebar({ killSwitchActive = false }: SidebarProps) {
         )}
       </div>
 
-      {/* ── Navigation ───────────────────────────────────────── */}
-      <nav className="flex-1 px-3 pt-4 pb-4 space-y-1">
+      {/* ── Navigation (strict 4px gap between items) ───────── */}
+      <nav className="flex-1 px-3 pt-3 pb-4 flex flex-col gap-1">
         {navigation.map((item) => {
           const isActive = pathname === item.href;
           const Icon = item.icon;
@@ -118,33 +127,27 @@ export function Sidebar({ killSwitchActive = false }: SidebarProps) {
               key={item.name}
               href={item.href}
               className={cn(
-                "relative flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-all duration-150 group",
+                "relative flex items-center gap-3 pl-3.5 pr-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 group overflow-hidden",
                 isActive
-                  ? "bg-blue-600/12 text-blue-400"
-                  : "text-zinc-400 hover:text-zinc-100 hover:bg-white/5"
+                  ? "bg-blue-600/20 text-blue-300 border-l-[3px] border-blue-500 font-semibold"
+                  : "text-zinc-400 hover:text-zinc-100 hover:bg-white/5 border-l-[3px] border-transparent"
               )}
             >
-              {/* Active left accent bar */}
-              {isActive && (
-                <span className="absolute left-0 top-2 bottom-2 w-[3px] rounded-full bg-blue-500" />
-              )}
               <Icon
                 className={cn(
                   "w-[18px] h-[18px] shrink-0",
                   isActive ? "text-blue-400" : "text-zinc-500 group-hover:text-zinc-300"
                 )}
               />
-              <span className={isActive ? "text-blue-300 font-semibold" : ""}>
-                {item.name}
-              </span>
+              <span>{item.name}</span>
             </Link>
           );
         })}
       </nav>
 
-      {/* ── Bottom Footer ────────────────────────────────────── */}
-      <div className="px-4 py-4 border-t border-[#374151]/60">
-        <div className="flex items-center gap-2 text-xs text-zinc-500">
+      {/* ── Bottom Footer (16px padding from bottom edge) ────── */}
+      <div className="p-4 border-t border-[#374151]/60">
+        <div className="flex items-center gap-2 text-[11px] text-zinc-400 opacity-60">
           <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
           <span>Razorpay Test Mode Only</span>
         </div>
@@ -168,11 +171,11 @@ export function Sidebar({ killSwitchActive = false }: SidebarProps) {
         <Menu className="w-5 h-5" />
       </button>
 
-      {/* ── Mobile Overlay ───────────────────────────────────── */}
+      {/* ── Mobile Overlay (40% backdrop per spec) ──────────── */}
       {mobileOpen && (
         <>
           <div
-            className="md:hidden fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
+            className="md:hidden fixed inset-0 z-40 bg-black/40 backdrop-blur-sm"
             onClick={() => setMobileOpen(false)}
           />
           <aside className="md:hidden fixed left-0 top-0 bottom-0 z-50 w-72 bg-[#0B0F19] border-r border-[#374151]/60 overflow-y-auto shadow-2xl">

@@ -98,7 +98,7 @@ export default function SettingsPage() {
       />
 
       {/* Policy Engine Rules */}
-      <div className="p-6 rounded-2xl bg-[#111827] border border-[#374151]/60 shadow-sm space-y-5">
+      <div className="p-6 rounded-2xl bg-[#111827] border border-[#374151]/60 shadow-sm space-y-4">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
@@ -118,11 +118,12 @@ export default function SettingsPage() {
           </span>
         </div>
 
-        <p className="text-xs text-zinc-500 leading-relaxed">
+        <p className="text-xs text-zinc-400 opacity-75 leading-relaxed">
           Groq AI (Llama 3.3 70B) is strictly isolated to root-cause classification only.
           All money-moving decisions — retries, payment links, escalations — are governed entirely by these deterministic rules:
         </p>
 
+        {/* 2x2 Grid with 16px gap, each card 16px padding */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {policyRules.map((rule) => {
             const Icon = rule.icon;
@@ -130,18 +131,20 @@ export default function SettingsPage() {
             return (
               <div
                 key={rule.title}
-                className={`p-5 rounded-xl bg-[#0B0F19] border ${c.border} space-y-2.5`}
+                className={`p-4 rounded-xl bg-[#0B0F19] border ${c.border} flex flex-col justify-between`}
               >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Icon className={`w-4 h-4 ${c.icon}`} />
-                    <span className="text-sm font-semibold text-zinc-200">{rule.title}</span>
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <div className="flex items-center gap-2">
+                      <Icon className={`w-4 h-4 ${c.icon}`} />
+                      <span className="text-sm font-semibold text-zinc-200">{rule.title}</span>
+                    </div>
+                    <span className={`text-[11px] font-bold font-mono ${c.icon} ${c.bg} px-2 py-0.5 rounded-md border ${c.border}`}>
+                      {rule.value}
+                    </span>
                   </div>
-                  <span className={`text-[11px] font-bold font-mono ${c.icon} ${c.bg} px-2 py-0.5 rounded-lg border ${c.border}`}>
-                    {rule.value}
-                  </span>
                 </div>
-                <p className="text-xs text-zinc-500 leading-relaxed">{rule.desc}</p>
+                <p className="text-xs text-zinc-400 opacity-75 leading-relaxed mt-1">{rule.desc}</p>
               </div>
             );
           })}
@@ -149,7 +152,7 @@ export default function SettingsPage() {
       </div>
 
       {/* Integration Health */}
-      <div className="p-6 rounded-2xl bg-[#111827] border border-[#374151]/60 shadow-sm space-y-5">
+      <div className="p-6 rounded-2xl bg-[#111827] border border-[#374151]/60 shadow-sm space-y-4">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
             <ShieldCheck className="w-5 h-5 text-emerald-400" />
@@ -162,71 +165,78 @@ export default function SettingsPage() {
           </div>
         </div>
 
+        {/* Three cards with 16px gap, equal height, status badge aligned top-right */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {/* Razorpay */}
-          <div className="p-5 rounded-xl bg-[#0B0F19] border border-[#374151]/60 space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <CreditCard className="w-4.5 h-4.5 text-blue-400" />
-                <span className="text-sm font-bold text-white">Razorpay</span>
+          <div className="p-4 rounded-xl bg-[#0B0F19] border border-[#374151]/60 flex flex-col justify-between h-full">
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <CreditCard className="w-4 h-4 text-blue-400" />
+                  <span className="text-sm font-bold text-white">Razorpay</span>
+                </div>
+                {connections.razorpay ? (
+                  <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/20">
+                    <CheckCircle2 className="w-3 h-3" /> Ready
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-md border border-amber-500/20">
+                    <Info className="w-3 h-3" /> Needs Key
+                  </span>
+                )}
               </div>
-              {connections.razorpay ? (
-                <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20">
-                  <CheckCircle2 className="w-3 h-3" /> Ready
-                </span>
-              ) : (
-                <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-full border border-amber-500/20">
-                  <Info className="w-3 h-3" /> Needs Key
-                </span>
-              )}
+              <p className="text-xs text-zinc-400 opacity-75 leading-relaxed">
+                Official Node.js SDK with <code className="text-zinc-300">rzp_test_*</code> credentials only. No live payments.
+              </p>
             </div>
-            <p className="text-xs text-zinc-500 leading-relaxed">
-              Official Node.js SDK with <code className="text-zinc-300">rzp_test_*</code> credentials only. No live payments.
-            </p>
           </div>
 
           {/* Groq AI */}
-          <div className="p-5 rounded-xl bg-[#0B0F19] border border-[#374151]/60 space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Cpu className="w-4.5 h-4.5 text-indigo-400" />
-                <span className="text-sm font-bold text-white">Groq AI</span>
+          <div className="p-4 rounded-xl bg-[#0B0F19] border border-[#374151]/60 flex flex-col justify-between h-full">
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <Cpu className="w-4 h-4 text-indigo-400" />
+                  <span className="text-sm font-bold text-white">Groq AI</span>
+                </div>
+                {connections.groq ? (
+                  <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/20">
+                    <CheckCircle2 className="w-3 h-3" /> Connected
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-md border border-amber-500/20">
+                    <Info className="w-3 h-3" /> Needs Key
+                  </span>
+                )}
               </div>
-              {connections.groq ? (
-                <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20">
-                  <CheckCircle2 className="w-3 h-3" /> Connected
-                </span>
-              ) : (
-                <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-full border border-amber-500/20">
-                  <Info className="w-3 h-3" /> Needs Key
-                </span>
-              )}
+              <p className="text-xs text-zinc-400 opacity-75 leading-relaxed">
+                Llama 3.3 70B for diagnosis only. Forced JSON schema with zero execution authority.
+              </p>
             </div>
-            <p className="text-xs text-zinc-500 leading-relaxed">
-              Llama 3.3 70B for diagnosis only. Forced JSON schema with zero execution authority.
-            </p>
           </div>
 
           {/* Supabase */}
-          <div className="p-5 rounded-xl bg-[#0B0F19] border border-[#374151]/60 space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Database className="w-4.5 h-4.5 text-emerald-400" />
-                <span className="text-sm font-bold text-white">Supabase</span>
+          <div className="p-4 rounded-xl bg-[#0B0F19] border border-[#374151]/60 flex flex-col justify-between h-full">
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <Database className="w-4 h-4 text-emerald-400" />
+                  <span className="text-sm font-bold text-white">Supabase</span>
+                </div>
+                {connections.supabase ? (
+                  <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/20">
+                    <CheckCircle2 className="w-3 h-3" /> Connected
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-md border border-amber-500/20">
+                    <Info className="w-3 h-3" /> Needs Key
+                  </span>
+                )}
               </div>
-              {connections.supabase ? (
-                <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20">
-                  <CheckCircle2 className="w-3 h-3" /> Connected
-                </span>
-              ) : (
-                <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-full border border-amber-500/20">
-                  <Info className="w-3 h-3" /> Needs Key
-                </span>
-              )}
+              <p className="text-xs text-zinc-400 opacity-75 leading-relaxed">
+                PostgreSQL database holding all cases, settings, and the immutable audit ledger.
+              </p>
             </div>
-            <p className="text-xs text-zinc-500 leading-relaxed">
-              PostgreSQL database holding all cases, settings, and the immutable audit ledger.
-            </p>
           </div>
         </div>
       </div>

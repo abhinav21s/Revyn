@@ -49,38 +49,39 @@ export function KillSwitchControl({
   return (
     <>
       <div
-        className={`p-6 rounded-2xl border transition-all duration-300 ${
+        className={`py-5 px-6 rounded-2xl border transition-all duration-300 ${
           active
             ? "bg-rose-950/30 border-rose-500/40 shadow-lg shadow-rose-950/30"
             : "bg-[#111827] border-[#374151]/60"
         }`}
       >
-        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-5">
+        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
           {/* Info Block */}
-          <div className="flex items-start gap-4">
+          <div className="flex items-start gap-3.5">
             <div
-              className={`w-12 h-12 rounded-2xl border flex items-center justify-center shrink-0 ${
+              className={`w-11 h-11 rounded-2xl border flex items-center justify-center shrink-0 ${
                 active
                   ? "bg-rose-500/15 border-rose-500/30"
                   : "bg-[#1F2937] border-[#374151]/60"
               }`}
             >
               {active ? (
-                <ShieldAlert className="w-6 h-6 text-rose-400 animate-pulse" />
+                <ShieldAlert className="w-5 h-5 text-rose-400 animate-pulse" />
               ) : (
-                <ShieldCheck className="w-6 h-6 text-emerald-400" />
+                <ShieldCheck className="w-5 h-5 text-emerald-400" />
               )}
             </div>
-            <div className="space-y-1.5">
-              <h3 className="text-base font-bold text-white tracking-tight">
+            <div>
+              <h3 className="text-[15px] font-bold text-white tracking-tight leading-tight">
                 Emergency Kill Switch
               </h3>
-              <p className="text-xs text-zinc-400 leading-relaxed max-w-xl">
+              <p className="text-xs text-zinc-400 opacity-75 leading-normal max-w-xl mt-1">
                 Immediately halts all automated recovery operations, stops Razorpay payment link creation,
                 and pauses all batch processing. Incoming failed payments are safely parked with status{" "}
                 <code className="text-rose-400 text-[11px] bg-rose-500/10 px-1 py-0.5 rounded">HALTED</code>.
               </p>
-              <div className="flex items-center gap-2 mt-2">
+              {/* Status text sitting 8px (mt-2) below description */}
+              <div className="mt-2 flex items-center gap-2">
                 <span
                   className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full border ${
                     active
@@ -99,20 +100,20 @@ export function KillSwitchControl({
             </div>
           </div>
 
-          {/* Toggle Button */}
+          {/* Toggle Button (height 36px, aligned to right side) */}
           <button
             onClick={() => setConfirmOpen(true)}
             disabled={loading}
-            className={`flex items-center gap-2.5 px-6 py-3 rounded-xl text-sm font-bold transition-all shadow-lg shrink-0 ${
+            className={`h-[36px] px-5 rounded-xl text-xs font-bold transition-all duration-150 shadow-lg shrink-0 flex items-center justify-center gap-2 hover:-translate-y-px active:translate-y-0 ${
               active
-                ? "bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-900/30 hover:shadow-emerald-800/40"
-                : "bg-rose-600 hover:bg-rose-500 text-white shadow-rose-900/30 hover:shadow-rose-800/40"
+                ? "bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-900/30"
+                : "bg-rose-600 hover:bg-rose-500 text-white shadow-rose-900/30"
             } disabled:opacity-60 disabled:cursor-not-allowed`}
           >
             {loading ? (
-              <RefreshCw className="w-4 h-4 animate-spin" />
+              <RefreshCw className="w-3.5 h-3.5 animate-spin" />
             ) : (
-              <Power className="w-4 h-4" />
+              <Power className="w-3.5 h-3.5" />
             )}
             <span>
               {active ? "Deactivate Kill Switch" : "Activate Kill Switch"}
@@ -124,10 +125,10 @@ export function KillSwitchControl({
       {/* Confirmation Modal */}
       {confirmOpen && (
         <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="w-full max-w-md bg-[#111827] border border-[#374151] rounded-2xl p-6 space-y-5 shadow-2xl">
+          <div className="w-full max-w-md bg-[#111827] border border-[#374151] rounded-2xl p-6 space-y-4 shadow-2xl">
             <div className="flex items-center gap-3">
               <div
-                className={`w-11 h-11 rounded-xl flex items-center justify-center border ${
+                className={`w-10 h-10 rounded-xl flex items-center justify-center border ${
                   active
                     ? "bg-emerald-500/10 border-emerald-500/20"
                     : "bg-rose-500/10 border-rose-500/20"
@@ -144,22 +145,22 @@ export function KillSwitchControl({
               </h4>
             </div>
 
-            <p className="text-sm text-zinc-400 leading-relaxed">
+            <p className="text-xs text-zinc-400 leading-relaxed">
               {active
                 ? "This will re-enable the Policy Engine and allow Revyn to process failed payments and create Razorpay Test Mode payment links."
                 : "This will immediately halt all automated Revyn recovery actions. No payments will be retried and no Razorpay links will be created until deactivated."}
             </p>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 pt-1">
               <button
                 onClick={() => setConfirmOpen(false)}
-                className="flex-1 px-4 py-2.5 rounded-xl bg-[#1F2937] hover:bg-[#374151] text-sm font-semibold text-zinc-300 transition-colors"
+                className="flex-1 h-[36px] rounded-xl bg-[#1F2937] hover:bg-[#374151] text-xs font-semibold text-zinc-300 transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={() => toggleKillSwitch(!active)}
-                className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-bold text-white transition-colors ${
+                className={`flex-1 h-[36px] rounded-xl text-xs font-bold text-white transition-colors ${
                   active
                     ? "bg-emerald-600 hover:bg-emerald-500"
                     : "bg-rose-600 hover:bg-rose-500"

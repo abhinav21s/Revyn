@@ -11,9 +11,9 @@ export default function DashboardLayout({
       {/* Persistent Sidebar */}
       <Sidebar />
 
-      {/* Main content */}
+      {/* Main scrollable content area */}
       <div className="flex-1 flex flex-col min-w-0 overflow-x-hidden">
-        <main className="flex-1 px-6 md:px-8 py-6 md:py-8 space-y-6 max-w-screen-xl w-full mx-auto">
+        <main className="flex-1 px-7 md:px-8 py-6 md:py-8 space-y-6 md:space-y-8 max-w-[1400px] w-full mx-auto">
           {children}
         </main>
       </div>

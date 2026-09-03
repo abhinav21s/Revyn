@@ -57,8 +57,8 @@ export default function DashboardPage() {
       />
 
       {/* Recent Cases */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
+      <div>
+        <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <Layers className="w-4 h-4 text-blue-400" />
             <h2 className="text-[15px] font-bold text-white tracking-tight">

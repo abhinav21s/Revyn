@@ -24,22 +24,33 @@ html, body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* ── Selection color: primary blue at 30% opacity ─ */
+::selection {
+  background-color: rgba(59, 130, 246, 0.3);
+  color: #FFFFFF;
+}
+
 /* Monospace for IDs / code */
 code, pre, .font-mono {
   font-family: 'JetBrains Mono', 'Fira Code', ui-monospace, monospace;
 }
 
-/* ── Scrollbar ──────────────────────────────────── */
+/* ── Scrollbars: dark theme styled (thin, rounded, low contrast) ── */
 ::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #374151; border-radius: 10px; }
-::-webkit-scrollbar-thumb:hover { background: #4B5563; }
+::-webkit-scrollbar-thumb { background: #1F2937; border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: #374151; }
 
 /* ── Focus ring ─────────────────────────────────── */
 :focus-visible {
-  outline: 2px solid rgba(59,130,246,0.5);
+  outline: 2px solid rgba(59, 130, 246, 0.5);
   outline-offset: 2px;
   border-radius: 8px;
+}
+
+/* ── Button transition: 150ms cubic-bezier(0.4, 0, 0.2, 1) ── */
+button {
+  transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* ── Tabular numerals ───────────────────────────── */
@@ -80,18 +91,27 @@ code, pre, .font-mono {
 
 /* ── Fade in up ─────────────────────────────────── */
 @keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(10px); }
-  to   { opacity: 1; transform: translateY(0);    }
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0);   }
 }
-.fade-in { animation: fadeInUp 0.25s ease-out; }
+.fade-in { animation: fadeInUp 0.2s ease-out; }
 
-/* ── Slide in from right (drawer) ───────────────── */
+/* ── Slide in from right (drawer: 200ms ease-out) ─ */
 @keyframes slideInRight {
   from { transform: translateX(100%); opacity: 0; }
   to   { transform: translateX(0);    opacity: 1; }
 }
 .slide-in-right {
-  animation: slideInRight 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: slideInRight 0.2s ease-out;
+}
+
+/* ── Slide down banner: 200ms ───────────────────── */
+@keyframes slideDown {
+  from { transform: translateY(-8px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+.slide-down {
+  animation: slideDown 0.2s ease-out;
 }
 
 /* ── Pulse dot ──────────────────────────────────── */
@@ -101,7 +121,10 @@ code, pre, .font-mono {
 }
 .pulse-dot { animation: pulse-dot 2s ease-in-out infinite; }
 
-/* ── Button scale micro-animation ───────────────── */
-.btn-scale { transition: transform 0.1s ease, box-shadow 0.1s ease; }
-.btn-scale:hover:not(:disabled) { transform: scale(1.02); }
-.btn-scale:active:not(:disabled) { transform: scale(0.98); }
+/* ── Card hover utility (subtle scale 1.01, 150ms) ── */
+.card-hover {
+  transition: transform 150ms cubic-bezier(0.4, 0, 0.2, 1), border-color 150ms ease;
+}
+.card-hover:hover {
+  transform: scale(1.01);
+}

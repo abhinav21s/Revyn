@@ -36,24 +36,24 @@ export default function AuditPage() {
         subtitle="Every AI diagnosis, policy decision, and execution step — permanently recorded"
       />
 
-      {/* Compliance Header Card */}
-      <div className="p-5 rounded-2xl bg-[#111827] border border-[#374151]/60 flex items-center justify-between gap-4 shadow-sm">
-        <div className="flex items-center gap-4">
-          <div className="w-11 h-11 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
+      {/* Compliance Header Card (Padding 16px 20px, Margin-bottom 20px, Total Entries align right font-semibold) */}
+      <div className="py-4 px-5 mb-5 rounded-2xl bg-[#111827] border border-[#374151]/60 flex items-center justify-between gap-4 shadow-sm">
+        <div className="flex items-center gap-3.5">
+          <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
             <ShieldCheck className="w-5 h-5 text-blue-400" />
           </div>
           <div>
-            <h3 className="text-sm font-bold text-white">
+            <h3 className="text-sm font-bold text-white leading-tight">
               Compliance-Grade Audit Standard
             </h3>
-            <p className="text-xs text-zinc-500 mt-0.5 leading-relaxed max-w-xl">
+            <p className="text-xs text-zinc-400 opacity-75 mt-0.5 leading-normal max-w-xl">
               Every step — DETECT → DIAGNOSE → DECIDE → EXECUTE — is recorded with timestamp, policy rule triggered, and actor signature. No entry is ever deleted or modified.
             </p>
           </div>
         </div>
         <div className="text-right shrink-0">
-          <div className="text-xs text-zinc-500 font-medium">Total Entries</div>
-          <div className="text-2xl font-bold text-white font-mono tabular-nums">
+          <div className="text-xs text-zinc-400 font-medium">Total Entries</div>
+          <div className="text-2xl font-semibold text-white font-mono tabular-nums leading-tight mt-0.5">
             {loading ? "—" : logs.length}
           </div>
         </div>

@@ -1,5 +1,4 @@
 import React from "react";
-import { cn } from "@/lib/utils";
 import type { CaseStatus, RootCause, PolicyAction } from "@/lib/types";
 import {
   CheckCircle2,
@@ -18,49 +17,49 @@ export function StatusBadge({ status }: { status: CaseStatus }) {
   switch (status) {
     case "recovered":
       return (
-        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-emerald-500/12 text-emerald-400 border border-emerald-500/25">
-          <CheckCircle2 className="w-3.5 h-3.5" />
+        <span className="h-[22px] px-2 rounded-md inline-flex items-center gap-1.5 text-[11px] font-semibold bg-emerald-500/12 text-emerald-400 border border-emerald-500/25 shrink-0">
+          <CheckCircle2 className="w-3 h-3" />
           Recovered
         </span>
       );
     case "in_progress":
       return (
-        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-blue-500/12 text-blue-400 border border-blue-500/25">
-          <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+        <span className="h-[22px] px-2 rounded-md inline-flex items-center gap-1.5 text-[11px] font-semibold bg-blue-500/12 text-blue-400 border border-blue-500/25 shrink-0">
+          <RefreshCw className="w-3 h-3 animate-spin" />
           In Progress
         </span>
       );
     case "pending":
       return (
-        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-amber-500/12 text-amber-400 border border-amber-500/25">
-          <Clock className="w-3.5 h-3.5" />
+        <span className="h-[22px] px-2 rounded-md inline-flex items-center gap-1.5 text-[11px] font-semibold bg-amber-500/12 text-amber-400 border border-amber-500/25 shrink-0">
+          <Clock className="w-3 h-3" />
           Pending
         </span>
       );
     case "escalated":
       return (
-        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-purple-500/12 text-purple-400 border border-purple-500/25">
-          <AlertTriangle className="w-3.5 h-3.5" />
+        <span className="h-[22px] px-2 rounded-md inline-flex items-center gap-1.5 text-[11px] font-semibold bg-purple-500/12 text-purple-400 border border-purple-500/25 shrink-0">
+          <AlertTriangle className="w-3 h-3" />
           Escalated
         </span>
       );
     case "unrecoverable":
       return (
-        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-[#1F2937] text-zinc-400 border border-[#374151]">
-          <XCircle className="w-3.5 h-3.5" />
+        <span className="h-[22px] px-2 rounded-md inline-flex items-center gap-1.5 text-[11px] font-semibold bg-[#1F2937] text-zinc-400 border border-[#374151] shrink-0">
+          <XCircle className="w-3 h-3" />
           Unrecoverable
         </span>
       );
     case "halted":
       return (
-        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-rose-500/12 text-rose-400 border border-rose-500/25">
-          <ShieldAlert className="w-3.5 h-3.5" />
+        <span className="h-[22px] px-2 rounded-md inline-flex items-center gap-1.5 text-[11px] font-semibold bg-rose-500/12 text-rose-400 border border-rose-500/25 shrink-0">
+          <ShieldAlert className="w-3 h-3" />
           Halted
         </span>
       );
     default:
       return (
-        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-[#1F2937] text-zinc-300 border border-[#374151]">
+        <span className="h-[22px] px-2 rounded-md inline-flex items-center gap-1.5 text-[11px] font-semibold bg-[#1F2937] text-zinc-300 border border-[#374151] shrink-0">
           {status}
         </span>
       );
@@ -92,13 +91,13 @@ export function RootCauseBadge({
 
   return (
     <div className="inline-flex items-center gap-1.5 flex-wrap">
-      <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-[#1F2937] text-zinc-200 border border-[#374151]/60">
+      <span className="h-[22px] px-2 rounded-md inline-flex items-center text-[11px] font-medium bg-[#1F2937] text-zinc-200 border border-[#374151]/60 shrink-0">
         {label}
       </span>
       {isLLM && (
         <span
           title="Diagnosed via Groq Llama 3.3 70B (Ambiguous case)"
-          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-500/15 text-indigo-300 border border-indigo-500/25"
+          className="h-[20px] px-1.5 rounded-md inline-flex items-center gap-1 text-[10px] font-bold bg-indigo-500/15 text-indigo-300 border border-indigo-500/25 shrink-0"
         >
           <Zap className="w-2.5 h-2.5" />
           Groq AI
