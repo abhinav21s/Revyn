@@ -1,0 +1,236 @@
+================================================================================
+REVYN — STEP-BY-STEP APPLICATION FLOW & COMPLETE TESTING WALKTHROUGH
+================================================================================
+
+This guide walks you through testing the entire Revyn application from start to finish.
+It explains exactly what to click, what you will see on the screen for that action,
+where to navigate next, and how every feature connects together.
+
+--------------------------------------------------------------------------------
+TABLE OF CONTENTS
+--------------------------------------------------------------------------------
+1. Starting & Opening the Application
+2. Main Dashboard (/) — Initial Overview
+3. Action 1: Running the Autonomous Batch Pipeline (The Magic Button)
+4. Action 2: Interacting with the Analytical Section (Animated Box & Bar Graph)
+5. Action 3: Inspecting a Transaction & Using the Split View
+6. Action 4: Simulating Customer Payment & Live Telemetry Update
+7. Action 5: Moving to the Recoveries Workspace (/recoveries)
+8. Action 6: Auditing System Events on the Immutable Ledger (/audit)
+9. Action 7: Testing the Emergency Kill Switch & Safety Engine (/settings)
+10. Recommended Demo/Testing Script Summary
+
+================================================================================
+1. STARTING & OPENING THE APPLICATION
+================================================================================
+1. Open your terminal in the project folder and run:
+   npm run dev
+2. Open your browser and go to:
+   http://localhost:3000
+3. You will arrive at the Revyn Fintech Operating Console.
+   Notice the sleek high-contrast dark theme (#06080F canvas with electric blue #0084FF accents).
+
+================================================================================
+2. MAIN DASHBOARD (/) — INITIAL OVERVIEW
+================================================================================
+When the dashboard loads, you will see 4 main visual tiers:
+
+[TIER 1] TOP NAVIGATION BAR (Topbar):
+- Website logo with the electric blue Favicon icon.
+- Live system indicator: "Razorpay Testnet Active" (green pulse).
+- Batch generation controls: Batch size dropdown [10 / 20 / 50 cases], "Run Batch" button, and "Reset" trash button.
+
+[TIER 2] 4 HIGH-LEVEL METRIC CARDS:
+- "Total at Risk": Sum of failed payment amounts in ₹.
+- "Recovered": Real revenue successfully collected via completed payments.
+- "Recovery Rate": Percentage recovered with comparative lift badge (+XX% vs 22% naive gateway retry).
+- "Pending Action": Cases currently in-flight, under cooldown, or escalated to human review.
+
+[TIER 3] ANALYTICAL SECTION (2 Side-by-Side Boxes):
+- Left Box ("Recovery rate vs naïve retry"):
+  - Top: Animated spring number (e.g., 58% or 11%) that counts up dynamically.
+  - Subtitle: Lift calculation compared to naive retry schedules.
+  - Full-Height 7-Day Paired Bar Graph: Comparing Revyn Agent (Electric Blue) vs Naive Gateway Retry (Slate Grey) for Mon through Sun.
+- Right Box ("Root cause distribution"):
+  - Vertically centered list of all 6 payment failure categories:
+    1. Insufficient Balance
+    2. Bank Timeout / 504
+    3. UPI Switch Downtime
+    4. Card Expired
+    5. Invalid CVV / Auth
+    6. Mandate Revoked / Cancelled
+  - Each item shows the amount in ₹, case count, percentage, and animated gradient progress bar.
+
+[TIER 4] RECENT RECOVERIES (Table View):
+- Filter tabs: All Cases, Recovered, In Progress, Escalated, Unrecoverable.
+- Live search bar and transaction table.
+
+================================================================================
+3. ACTION 1: RUNNING THE AUTONOMOUS BATCH PIPELINE
+================================================================================
+WHAT TO CLICK:
+1. Look at the top-right of the screen in the TopBar.
+2. Select your desired batch size from the dropdown (e.g., 10 or 20 cases).
+3. Click the electric blue button: "Run Batch".
+
+WHAT YOU WILL SEE:
+1. The button will show a loading spinner: "Running Pipeline...".
+2. Behind the scenes:
+   - Synthetic failed payments are generated across top Indian merchants (Swiggy, Zepto, Meesho, Blinkit) and various payment rails (UPI, Card, Netbanking).
+   - The Groq AI / Rule Engine diagnoses each failure code.
+   - The Deterministic Policy Engine decides the exact safe action.
+   - Real Razorpay Test Mode Payment Links (https://rzp.io/i/...) are generated.
+   - All events are committed to the immutable audit ledger.
+3. Once complete, a green notification banner appears summarizing the batch run (e.g., "10 cases processed: 6 payment links generated, 2 smart retries, 1 escalated, 1 stopped").
+4. All 4 top metric cards instantly animate and refresh with live figures.
+5. The Recent Recoveries table updates with the newly ingested transactions.
+
+================================================================================
+4. ACTION 2: INTERACTING WITH THE ANALYTICAL SECTION
+================================================================================
+WHAT TO DO:
+1. In the Left Box ("Recovery rate vs naïve retry"), hover your mouse over any bar (e.g., "Wed" or "Fri") or click on it.
+
+WHAT YOU WILL SEE:
+1. The bar you hovered over scales up with an electric blue halo glow.
+2. A tooltip pops up displaying the exact percentage for that day.
+3. Look at the top of the box:
+   - The big number dynamically springs and animates to that specific day's recovery rate!
+   - A pill appears: "Wed Selected".
+   - The lift text updates in real-time to show: "Wed performance: +39% lift over naïve retry (22%)".
+4. Move your mouse away:
+   - The number smoothly springs back to the overall 7-day rate.
+5. In the Right Box ("Root cause distribution"):
+   - Notice all 6 failure causes are vertically centered in the box with equal breathing room, displaying live ₹ volume and counts.
+
+================================================================================
+5. ACTION 3: INSPECTING A TRANSACTION & USING THE SPLIT VIEW
+================================================================================
+WHAT TO DO:
+1. Scroll down to the "Recent recoveries" table.
+2. Click on ANY row in the table (or click the "Inspect" icon on the right end of a row).
+
+WHAT YOU WILL SEE:
+1. The screen smoothly splits into a 2-column view:
+   - LEFT SIDE (56% width): The table remains fully visible and interactive.
+   - RIGHT SIDE (44% width): A sticky "Case Detail" inspector panel opens immediately.
+   - (NOTE: On smaller or resized screens, this proportional split remains active so the details never get hidden or pushed off-screen).
+2. Look inside the right-hand Case Detail panel:
+   - Merchant Name (e.g., Zepto, Swiggy) and Case ID.
+   - Total Amount in ₹ (e.g., ₹1,499).
+   - Status Badge (e.g., In Progress, Payment Link Sent, or Escalated).
+   - STEP 1 (AI Diagnosis Box):
+     Shows raw error code, diagnosed root cause, and whether it was diagnosed via "Rule Engine" or "Groq AI (Llama 3.3 70B)" with confidence score (e.g., 98%).
+   - STEP 2 (Policy Decision Box):
+     Shows the hard-coded policy rule triggered (e.g., SEND_PAYMENT_LINK, SMART_RETRY, or HARD_STOP_MANDATE) and the deterministic explanation.
+   - STEP 3 (Razorpay Link & WhatsApp Copy):
+     Displays the live Razorpay payment URL (https://rzp.io/i/...).
+     Shows the customer recovery message generated in natural Hinglish!
+   - CASE AUDIT HISTORY:
+     Chronological timeline of events recorded specifically for this case.
+
+================================================================================
+6. ACTION 4: SIMULATING CUSTOMER PAYMENT & LIVE TELEMETRY UPDATE
+================================================================================
+WHAT TO DO:
+1. In the open Case Detail panel on the right, find the blue button at the top:
+   "Simulate Customer Paid".
+2. Click "Simulate Customer Paid".
+
+WHAT YOU WILL SEE:
+1. The button shows a processing spinner.
+2. Instant visual updates:
+   - The status badge on the case instantly flips to green: "RECOVERED".
+   - A success alert confirms payment resolution.
+   - In the left table, that transaction row updates to green "Recovered".
+   - At the top of the dashboard, "Recovered Revenue" and "Recovery Rate" increase in real-time.
+   - A new immutable audit entry is automatically appended to the ledger.
+3. Click the "X" button at the top-right of the Case Detail panel:
+   - The right panel closes and the table expands back to 100% full width smoothly.
+
+================================================================================
+7. ACTION 5: MOVING TO THE RECOVERIES WORKSPACE (/recoveries)
+================================================================================
+WHERE TO GO NEXT:
+1. In the left Sidebar, click on "Recoveries" (or click "Open workspace ->" above the dashboard table).
+
+WHAT YOU WILL SEE:
+1. You are now on the dedicated Recoveries Workspace (/recoveries).
+2. This page provides a full-scale view of all payment cases:
+   - Advanced Filter Tabs: Filter by All, Recovered, In Progress, Escalated, or Unrecoverable.
+   - Search by customer name, email, merchant, or error code.
+3. Test the Split View on this page:
+   - Click any transaction row in this table.
+   - Notice the exact same proportional split screen opens on the right, allowing you to inspect, copy payment links, read the Hinglish WhatsApp message, or trigger actions without losing your place in the list!
+
+================================================================================
+8. ACTION 6: AUDITING SYSTEM EVENTS ON THE IMMUTABLE LEDGER (/audit)
+================================================================================
+WHERE TO GO NEXT:
+1. In the left Sidebar, click on "Audit Trail".
+
+WHAT YOU WILL SEE:
+1. You are now on the Immutable Compliance Ledger (/audit).
+2. This screen tracks every automated action Revyn executes for regulatory compliance:
+   - Each entry has an Event ID, Timestamp, Lifecycle Stage (DETECT, DIAGNOSE, DECIDE, EXECUTE, RECOVERED, or SETTINGS), and Action Summary.
+   - Filter Tabs across the top let you filter by step: e.g. click "DIAGNOSE" to see only AI diagnosis events, or "DECIDE" to see policy choices.
+
+WHAT TO CLICK:
+1. Click on ANY row in the audit trail list.
+
+WHAT YOU WILL SEE:
+1. The row expands downwards to reveal the inline "JSON Payload Inspector".
+2. You can inspect the cryptographic metadata, actor signature ("revyn_engine"), exact parameters, and reason for the decision.
+3. Click the row again to collapse it.
+
+================================================================================
+9. ACTION 7: TESTING THE EMERGENCY KILL SWITCH & SAFETY ENGINE (/settings)
+================================================================================
+WHERE TO GO NEXT:
+1. In the left Sidebar, click on "Settings".
+
+WHAT YOU WILL SEE:
+1. You are on the Safety & Configuration page (/settings):
+   - Emergency Kill Switch Panel: Current status is "System Operational" (Green).
+   - Autonomous Policy Guardrails: Shows active safety limits (Max 3 retry attempts, ₹100 economic floor, 4-hour cooldown, fallback mode).
+   - Gateway & Service Integrations: Shows live status for Razorpay API, Groq AI, and Database.
+
+WHAT TO CLICK (EMERGENCY KILL SWITCH TEST):
+1. In the Emergency Kill Switch panel, click the prominent red button:
+   "ACTIVATE KILL SWITCH".
+
+WHAT YOU WILL SEE:
+1. A security confirmation modal pops up warning that all autonomous recovery jobs will immediately halt.
+2. Click "Yes, Activate Kill Switch" in the modal.
+3. Expected Result:
+   - The status indicator flips to red: "KILL SWITCH ACTIVE - ALL AUTOMATION FROZEN".
+   - The button changes to "DEACTIVATE KILL SWITCH".
+4. Now, go back to the TopBar and try to click "Run Batch":
+   - The system intercepts the action and refuses to execute automated payments while the kill switch is engaged, logging a safety stop to the audit trail!
+5. To restore normal operations:
+   - Return to /settings and click "Deactivate Kill Switch".
+   - Confirm deactivation, and the system restores to operational status (Green).
+
+================================================================================
+10. RECOMMENDED 2-MINUTE DEMO SCRIPT
+================================================================================
+If you want to quickly demonstrate Revyn to someone or test everything in 2 minutes:
+
+1. Go to http://localhost:3000
+2. Click "Run Batch" (TopBar) -> Watch 10-20 transactions process autonomously.
+3. Show the Analytical Section:
+   - Hover over the 7-day Bar Graph -> Point out how the spring number dynamically updates and the bars glow.
+   - Point to the Root Cause Distribution on the right -> Show Groq AI's categorization of failure reasons.
+4. Click any transaction in "Recent recoveries":
+   - Point out the seamless Split Screen view (Table on left, Inspector on right).
+   - Show the Hinglish WhatsApp copy and the real Razorpay test link.
+5. Click "Simulate Customer Paid":
+   - Watch the transaction instantly turn green (RECOVERED) and metrics climb.
+6. Click "Audit Trail" in the sidebar:
+   - Click an audit row to expand the JSON payload and demonstrate complete regulatory traceability.
+7. Click "Settings" in the sidebar:
+   - Demonstrate the Emergency Kill Switch, proving Revyn is safely bounded and compliant with fintech guardrails.
+
+================================================================================
+END OF WALKTHROUGH
+================================================================================

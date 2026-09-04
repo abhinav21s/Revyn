@@ -146,7 +146,13 @@ export function AuditLogViewer({
                   const isExpanded = expandedId === log.id;
                   const logDate = formatDate(log.created_at);
 
-                  // 5 Stages data exactly matching the user's provided screenshot
+                  // Check if this case has a RECOVERED log entry
+                  const recoveredLog = logs.find(
+                    (l) => l.case_id === log.case_id && l.step === "RECOVERED"
+                  );
+                  const isRecovered = Boolean(recoveredLog);
+
+                  // 5 Stages data — MEASURE reflects actual recovery status
                   const stages = [
                     {
                       key: "DETECT",
@@ -157,7 +163,7 @@ export function AuditLogViewer({
                       status: "OK",
                       statusType: "success",
                       policyTag: null,
-                      description: `Ingested from Razorpay Test Mode webhook payment.failed · GATEWAY_ERROR / upstream_timeout`,
+                      description: log.reason || `Ingested from Razorpay Test Mode webhook payment.failed · GATEWAY_ERROR / upstream_timeout`,
                     },
                     {
                       key: "DIAGNOSE",
@@ -195,13 +201,15 @@ export function AuditLogViewer({
                     {
                       key: "MEASURE",
                       name: "MEASURE",
-                      icon: Server,
-                      iconColor: "text-[#00A6FF]",
-                      timestamp: logDate,
-                      status: "Waiting",
-                      statusType: "waiting",
+                      icon: isRecovered ? CheckCircle2 : Server,
+                      iconColor: isRecovered ? "text-emerald-400" : "text-[#00A6FF]",
+                      timestamp: isRecovered ? formatDate(recoveredLog!.created_at) : logDate,
+                      status: isRecovered ? "Recovered" : "Waiting",
+                      statusType: isRecovered ? "success" : "waiting",
                       policyTag: null,
-                      description: `Awaiting outcome window (24h)`,
+                      description: isRecovered
+                        ? `Payment confirmed · Revenue recovered successfully via Razorpay`
+                        : `Awaiting payment confirmation`,
                     },
                   ];
 

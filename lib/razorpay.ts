@@ -70,13 +70,13 @@ export async function createPaymentLink(
       accept_partial: false,
       description,
       customer: {
-        name: customerName,
+        name: customerName || "Customer",
         ...(customerEmail && { email: customerEmail }),
         ...(customerPhone && { contact: customerPhone }),
       },
       notify: {
-        sms: !!customerPhone,
-        email: !!customerEmail,
+        sms: Boolean(customerPhone),
+        email: Boolean(customerEmail),
       },
       reminder_enable: true,
       notes: {
@@ -93,13 +93,46 @@ export async function createPaymentLink(
     };
   }
 
-  // Graceful fallback for Test Mode Demo simulation
-  const randomLinkId = "plink_test_" + Math.random().toString(36).substring(2, 10);
-  return {
-    id: randomLinkId,
-    short_url: `https://rzp.io/i/${randomLinkId}`,
-    status: "created",
-  };
+  throw new Error("[Razorpay] Instance not initialized — check RAZORPAY_KEY_ID in .env");
+}
+
+// Fetch live Razorpay payment link status from Razorpay API
+export async function fetchPaymentLink(paymentLinkId: string) {
+  if (!razorpayInstance) return null;
+  try {
+    return await razorpayInstance.paymentLink.fetch(paymentLinkId);
+  } catch (err) {
+    console.error("[Razorpay] Error fetching payment link:", err);
+    return null;
+  }
+}
+
+// Create Razorpay Order for Test Mode Standard Checkout
+// NOTE: This MUST succeed and return a real Razorpay order_id.
+// Opening checkout.js without a real order_id causes Razorpay to reject
+// valid domestic test cards with misleading "invalid card number" errors.
+export async function createRazorpayOrder(
+  amount: number,
+  referenceId: string
+) {
+  if (!razorpayInstance) {
+    throw new Error(
+      "[Razorpay] razorpayInstance is null — check RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET in .env"
+    );
+  }
+
+  // Let errors propagate — the caller (API route) will handle them properly
+  const order = await razorpayInstance.orders.create({
+    amount,
+    currency: "INR",
+    receipt: referenceId.slice(0, 40),
+    notes: {
+      revyn_case_id: referenceId,
+      environment: "test",
+    },
+  });
+
+  return order;
 }
 
 // Verify Razorpay webhook signature

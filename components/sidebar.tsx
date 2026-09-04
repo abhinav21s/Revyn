@@ -13,6 +13,7 @@ import {
   Power,
   AlertTriangle,
 } from "lucide-react";
+import { emitToast } from "@/lib/toast";
 
 const NAV_ITEMS = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
@@ -31,22 +32,45 @@ export function Sidebar({ onClose }: SidebarProps) {
   const [confirmKill, setConfirmKill] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  const fetchState = async () => {
+    try {
+      const res = await fetch("/api/settings");
+      if (res.ok) {
+        const d = await res.json();
+        setKillActive(d.settings?.kill_switch === "true");
+      }
+    } catch { /* silent */ }
+  };
+
   useEffect(() => {
-    fetch("/api/settings")
-      .then((r) => r.json())
-      .then((d) => setKillActive(d.settings?.kill_switch === "true"))
-      .catch(() => {});
+    fetchState();
+    const handleUpdate = () => fetchState();
+    window.addEventListener("revyn:kill-switch-changed", handleUpdate);
+    return () => window.removeEventListener("revyn:kill-switch-changed", handleUpdate);
   }, []);
 
   const toggleKill = async () => {
     setLoading(true);
+    const nextState = !killActive;
     try {
       const res = await fetch("/api/settings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ key: "kill_switch", value: killActive ? "false" : "true" }),
+        body: JSON.stringify({ key: "kill_switch", value: nextState ? "true" : "false" }),
       });
-      if (res.ok) setKillActive(!killActive);
+      if (res.ok) {
+        setKillActive(nextState);
+        window.dispatchEvent(new CustomEvent("revyn:kill-switch-changed"));
+        if (nextState) {
+          emitToast("Emergency Kill Switch ACTIVATED — All autonomous operations halted.", "error", 5000);
+        } else {
+          emitToast("Operations RESUMED — Autonomous recovery engine active.", "success", 5000);
+        }
+      } else {
+        emitToast("Failed to update kill switch state.", "error");
+      }
+    } catch {
+      emitToast("Network error toggling kill switch.", "error");
     } finally {
       setLoading(false);
       setConfirmKill(false);
@@ -87,7 +111,7 @@ export function Sidebar({ onClose }: SidebarProps) {
               href={href}
               onClick={onClose}
               className={cn(
-                "flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-[13px] font-medium transition-all group",
+                "flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-[13px] font-medium transition-all group cursor-pointer",
                 isActive
                   ? "bg-[#0084FF]/15 text-[#38BDF8] border border-[#0084FF]/30 font-semibold shadow-sm shadow-[#0084FF]/10"
                   : "text-[#94A3B8] hover:text-[#F8FAFC] hover:bg-[#141C2E] border border-transparent"
@@ -145,7 +169,7 @@ export function Sidebar({ onClose }: SidebarProps) {
             onClick={() => setConfirmKill(true)}
             disabled={loading}
             className={cn(
-              "w-full py-2 px-3 rounded-lg text-[12px] font-bold transition-all flex items-center justify-center gap-1.5 shadow-sm active:scale-98",
+              "w-full py-2 px-3 rounded-lg text-[12px] font-bold transition-all flex items-center justify-center gap-1.5 shadow-sm active:scale-98 cursor-pointer disabled:opacity-50",
               killActive
                 ? "bg-emerald-500 hover:bg-emerald-400 text-black"
                 : "bg-red-600 hover:bg-red-500 text-white shadow-red-600/20"
@@ -179,14 +203,14 @@ export function Sidebar({ onClose }: SidebarProps) {
             <div className="flex gap-2.5 pt-2">
               <button
                 onClick={() => setConfirmKill(false)}
-                className="flex-1 py-2 rounded-lg bg-[#141C2E] hover:bg-[#18233A] text-[13px] font-medium text-[#94A3B8] transition-colors"
+                className="flex-1 py-2 rounded-lg bg-[#141C2E] hover:bg-[#18233A] text-[13px] font-medium text-[#94A3B8] transition-colors cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 onClick={toggleKill}
                 className={cn(
-                  "flex-1 py-2 rounded-lg text-[13px] font-bold text-white transition-colors",
+                  "flex-1 py-2 rounded-lg text-[13px] font-bold text-white transition-colors cursor-pointer",
                   killActive ? "bg-emerald-600 hover:bg-emerald-500" : "bg-red-600 hover:bg-red-500"
                 )}
               >

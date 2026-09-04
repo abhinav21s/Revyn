@@ -52,6 +52,30 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
           rel="stylesheet"
         />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if (typeof window !== 'undefined') {
+                window.addEventListener('unhandledrejection', function(event) {
+                  var reason = event.reason;
+                  var str = String((reason && (reason.message || reason.stack || reason)) || '');
+                  if (
+                    str.indexOf('chrome-extension://') !== -1 ||
+                    str.indexOf('disconnected from all chains') !== -1 ||
+                    str.indexOf('provider is disconnected') !== -1 ||
+                    str.indexOf('MetaMask') !== -1 ||
+                    str.indexOf('Coinbase') !== -1 ||
+                    str.indexOf('Phantom') !== -1 ||
+                    (reason && typeof reason === 'object' && Object.keys(reason).length === 0)
+                  ) {
+                    event.preventDefault();
+                    event.stopImmediatePropagation();
+                  }
+                }, true);
+              }
+            `,
+          }}
+        />
       </head>
       <body className="antialiased">{children}</body>
     </html>

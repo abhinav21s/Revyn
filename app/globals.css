@@ -112,6 +112,14 @@ html, body {
   background: #2E3E60;
 }
 
+/* Global cursor pointer for all interactive elements */
+button, [role="button"], a, select, label[for], summary {
+  cursor: pointer;
+}
+button:disabled {
+  cursor: not-allowed;
+}
+
 /* Drawer slide */
 @keyframes slideInRight {
   from { transform: translateX(100%); }

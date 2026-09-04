@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { Sidebar } from "@/components/sidebar";
 import { TopBar } from "@/components/topbar";
+import { GlobalToastContainer } from "@/components/global-toast";
 
 export default function DashboardLayout({
   children,
@@ -13,6 +14,9 @@ export default function DashboardLayout({
 
   return (
     <div className="min-h-screen flex bg-[#06080F] text-[#F8FAFC]">
+      {/* Global Top-Mounted Toast Notifications */}
+      <GlobalToastContainer />
+
       {/* Desktop Sidebar: normal flex sibling (sticky top-0 h-screen, exactly 260px) */}
       <aside className="hidden md:flex w-[260px] shrink-0 border-r border-[#1C273E] bg-[#090D17] sticky top-0 h-screen flex-col z-30">
         <Sidebar />

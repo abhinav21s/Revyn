@@ -19,6 +19,7 @@ import {
   Database,
   RefreshCw,
 } from "lucide-react";
+import { emitToast } from "@/lib/toast";
 
 export default function SettingsPage() {
   const [connections, setConnections] = useState({
@@ -33,6 +34,9 @@ export default function SettingsPage() {
 
   useEffect(() => {
     fetchSettings();
+    const handleUpdate = () => fetchSettings();
+    window.addEventListener("revyn:kill-switch-changed", handleUpdate);
+    return () => window.removeEventListener("revyn:kill-switch-changed", handleUpdate);
   }, []);
 
   const fetchSettings = async () => {
@@ -65,7 +69,17 @@ export default function SettingsPage() {
       });
       if (res.ok) {
         setKillSwitchActive(targetState);
+        window.dispatchEvent(new CustomEvent("revyn:kill-switch-changed"));
+        if (targetState) {
+          emitToast("Emergency Kill Switch ACTIVATED — Autonomous operations halted.", "error", 5000);
+        } else {
+          emitToast("Operations RESUMED — Autonomous recovery engine active.", "success", 5000);
+        }
+      } else {
+        emitToast("Failed to update kill switch state.", "error");
       }
+    } catch {
+      emitToast("Network error updating kill switch.", "error");
     } finally {
       setToggling(false);
       setConfirmKill(false);
@@ -76,7 +90,7 @@ export default function SettingsPage() {
     {
       icon: RotateCcw,
       title: "Max Retry Limit",
-      value: "3 attempts",
+      value: "3 Attempts Max",
       desc: "Strict ceiling on automatic retry attempts per invoice to prevent card network fatigue and merchant compliance sanctions.",
     },
     {
@@ -88,32 +102,38 @@ export default function SettingsPage() {
     {
       icon: TrendingDown,
       title: "Economic Floor",
-      value: "₹10.00 minimum",
-      desc: "Payments under the floor are excluded from recovery loops to ensure unit economics remain strictly positive.",
+      value: "₹10 Minimum Value",
+      desc: "Payments below ₹10 are excluded from all recovery loops. Ensures unit economics remain strictly positive and avoids gateway fee losses.",
     },
     {
       icon: Calendar,
-      title: "Salary Window Retries",
-      value: "Days 1–5 (2h loop)",
-      desc: "Insufficient balance failures occurring during month-turn salary windows use rapid 2-hour retry cycles instead of 24 hours.",
+      title: "Month-End Salary Window",
+      value: "Days 1–5 · 2hr Loop",
+      desc: "Insufficient balance failures on days 1–5 of each month (salary credit window) switch to rapid 2-hour retry cycles instead of standard 24-hour spacing.",
     },
     {
       icon: MessageSquare,
       title: "Message Limits & Anti-Spam",
-      value: "1 link per case",
-      desc: "Customers receive at most one recovery payment link per failure episode. No repetitive messaging or duplicate links.",
+      value: "1 Link Per Case",
+      desc: "Customers receive at most one recovery payment link per failure episode. No repetitive messaging or duplicate Razorpay links.",
     },
     {
       icon: Cpu,
       title: "LLM = Diagnosis Only",
       value: "Zero Financial Authority",
-      desc: "Groq Llama 3.3 70B output is strictly constrained to root-cause classification schema. Zero authority to authorize funds.",
+      desc: "Groq Llama 3.3 70B output is strictly constrained to root-cause classification schema. Zero authority to authorize or move funds.",
     },
     {
       icon: UserCheck,
       title: "Human Escalation Policy",
       value: "Tier-2 Review",
-      desc: "Unknown errors, mandate disputes, and cases reaching maximum attempts are auto-routed to merchant operators.",
+      desc: "Unknown errors, mandate disputes, and cases reaching maximum attempts are auto-routed to merchant operators for human review.",
+    },
+    {
+      icon: RefreshCw,
+      title: "Groq AI Fallback Mode",
+      value: "Rule Engine Backup",
+      desc: "If Groq AI is unavailable or returns an ambiguous result, the system automatically falls back to the deterministic rule-based diagnosis engine — zero downtime.",
     },
   ];
 
