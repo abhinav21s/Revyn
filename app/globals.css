@@ -36,6 +36,43 @@
   /* Chart Tokens */
   --chart-1: #0084FF;
   --chart-5: #334155;
+
+  /* Shadcn UI compatibility tokens */
+  --background: #06080F;
+  --foreground: #F8FAFC;
+  --card: #0F1523;
+  --card-foreground: #F8FAFC;
+  --popover: #0F1523;
+  --popover-foreground: #F8FAFC;
+  --muted: #141C2E;
+  --muted-foreground: #94A3B8;
+  --accent: #18233A;
+  --accent-foreground: #F8FAFC;
+  --border: #1C273E;
+  --input: #1C273E;
+  --ring: #0084FF;
+}
+
+@theme {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: #FFFFFF;
+  --color-secondary: var(--bg-surface-raised);
+  --color-secondary-foreground: var(--text-primary);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--text-primary);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: #FFFFFF;
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
 }
 
 *, *::before, *::after {

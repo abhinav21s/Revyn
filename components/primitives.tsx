@@ -11,12 +11,14 @@ export function Panel({
   action,
   children,
   className,
+  contentClassName,
 }: {
   title?: React.ReactNode;
   description?: React.ReactNode;
   action?: React.ReactNode;
   children: React.ReactNode;
   className?: string;
+  contentClassName?: string;
 }) {
   return (
     <div
@@ -26,7 +28,7 @@ export function Panel({
       )}
     >
       {(title || description || action) && (
-        <div className="px-6 py-4.5 border-b border-[#1C273E] flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#090D17]/50">
+        <div className="px-6 py-3.5 border-b border-[#1C273E] flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#090D17]/50">
           <div>
             {title && (
               <h3 className="text-[15px] font-bold tracking-tight text-[#F8FAFC]">
@@ -42,7 +44,7 @@ export function Panel({
           {action && <div className="shrink-0">{action}</div>}
         </div>
       )}
-      <div className="p-6">{children}</div>
+      <div className={cn("p-6", contentClassName)}>{children}</div>
     </div>
   );
 }

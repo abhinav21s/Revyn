@@ -1,9 +1,10 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { Panel } from "./primitives";
 import type { PaymentCase, BatchMetrics } from "@/lib/types";
 import { formatCurrency } from "@/lib/utils";
+import { AnimatedValue } from "@/components/ui/stats-card-1";
 
 interface DashboardChartsProps {
   cases: PaymentCase[];
@@ -11,6 +12,8 @@ interface DashboardChartsProps {
 }
 
 export function DashboardCharts({ cases, metrics }: DashboardChartsProps) {
+  const [activeDay, setActiveDay] = useState<string | null>(null);
+
   // ── 1. Root cause distribution calculation ──
   const ROOT_CAUSES = [
     { key: "insufficient_balance", label: "Insufficient Balance" },
@@ -38,7 +41,7 @@ export function DashboardCharts({ cases, metrics }: DashboardChartsProps) {
     };
   });
 
-  // ── 2. 7-Day Comparison: Revyn vs Naive Retry ──
+  // ── 2. 7-Day Comparison: Revyn vs Naive Retry (Bar Graph data) ──
   const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   const revynRate = Math.round(((metrics?.recovery_rate && metrics.recovery_rate > 0) ? metrics.recovery_rate : 0.58) * 100);
   const baselineRate = Math.round(((metrics?.baseline_recovery_rate && metrics.baseline_recovery_rate > 0) ? metrics.baseline_recovery_rate : 0.22) * 100);
@@ -50,12 +53,20 @@ export function DashboardCharts({ cases, metrics }: DashboardChartsProps) {
     return { day, revynVal, baseVal };
   });
 
+  // Active day telemetry (if hovered or clicked)
+  const activeDayData = activeDay ? chartData.find((d) => d.day === activeDay) : null;
+  const displayedRate = activeDayData ? activeDayData.revynVal : revynRate;
+  const displayedLift = activeDayData
+    ? activeDayData.revynVal - activeDayData.baseVal
+    : Math.max(0, revynRate - baselineRate);
+
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      {/* ── Panel 1: Recovery rate vs naïve retry (paired bar chart) ── */}
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
+      {/* ── Box 1: Integrated Number Changing Animation + Full-Height Bar Graph ── */}
       <Panel
         title="Recovery rate vs naïve retry"
         description="7-day bounded policy engine performance against standard gateway retry schedules"
+        contentClassName="pt-3.5 pb-4 px-6 flex flex-col justify-between h-full"
         action={
           <div className="flex items-center gap-4 text-[12px]">
             <div className="flex items-center gap-2">
@@ -69,61 +80,140 @@ export function DashboardCharts({ cases, metrics }: DashboardChartsProps) {
           </div>
         }
       >
-        <div className="pt-2">
-          {/* Paired Bar Chart Container */}
-          <div className="h-[210px] flex items-end justify-between gap-3 pt-6 pb-2 border-b border-[#1C273E]">
-            {chartData.map((d) => (
-              <div key={d.day} className="flex-1 flex flex-col items-center h-full justify-end group">
-                <div className="w-full flex items-end justify-center gap-2 h-[160px]">
-                  {/* Revyn Bar (Electric Blue) */}
-                  <div
-                    className="w-full max-w-[20px] rounded-t-md transition-all duration-300 relative bg-[#0084FF] hover:brightness-125 shadow-[0_0_12px_rgba(0,132,255,0.45)]"
-                    style={{ height: `${Math.max(15, d.revynVal)}%` }}
-                    title={`Revyn: ${d.revynVal}%`}
-                  >
-                    <span className="opacity-0 group-hover:opacity-100 transition-opacity absolute -top-6 left-1/2 -translate-x-1/2 text-[10px] font-mono font-bold text-[#38BDF8] bg-[#090D17] px-1 rounded border border-[#0084FF]/40 pointer-events-none">
-                      {d.revynVal}%
-                    </span>
-                  </div>
-
-                  {/* Baseline Bar (Neutral Slate) */}
-                  <div
-                    className="w-full max-w-[20px] rounded-t-md transition-all duration-300 bg-[#334155] hover:bg-[#475569]"
-                    style={{ height: `${Math.max(10, d.baseVal)}%` }}
-                    title={`Baseline: ${d.baseVal}%`}
-                  >
-                    <span className="opacity-0 group-hover:opacity-100 transition-opacity absolute -top-6 left-1/2 -translate-x-1/2 text-[10px] font-mono text-[#94A3B8] bg-[#090D17] px-1 rounded border border-[#334155] pointer-events-none">
-                      {d.baseVal}%
-                    </span>
-                  </div>
-                </div>
-                <span className="text-[11px] font-mono font-semibold text-[#64748B] mt-2.5">
-                  {d.day}
-                </span>
+        <div className="flex flex-col justify-between h-full">
+          {/* Integrated Number Changing Animation Header */}
+          <div className="flex items-start justify-between pb-3 border-b border-[#1C273E]/60">
+            <div>
+              <div className="flex items-baseline gap-2.5">
+                <h2 className="text-3xl font-bold font-mono tracking-tight text-[#F8FAFC]">
+                  <AnimatedValue value={displayedRate} postfix="%" />
+                </h2>
+                {activeDayData && (
+                  <span className="text-[11px] font-mono font-semibold px-2 py-0.5 rounded bg-[#0084FF]/20 text-[#38BDF8] border border-[#0084FF]/40 animate-pulse">
+                    {activeDayData.day} Selected
+                  </span>
+                )}
               </div>
-            ))}
-          </div>
+              <p className="text-xs text-[#94A3B8] mt-1">
+                {activeDayData ? (
+                  <>
+                    {activeDayData.day} performance:{" "}
+                    <span className="font-semibold text-emerald-400">+{displayedLift}% lift</span>{" "}
+                    over naïve retry ({activeDayData.baseVal}%)
+                  </>
+                ) : (
+                  <>
+                    Autonomous engine lift is{" "}
+                    <span className="font-semibold text-emerald-400">+{displayedLift}%</span>{" "}
+                    vs standard retry schedules
+                  </>
+                )}
+              </p>
+            </div>
 
-          <div className="flex items-center justify-between pt-3.5 text-[12px]">
-            <span className="text-[#94A3B8]">
-              Estimated Lift:{" "}
-              <span className="font-bold font-mono text-emerald-400">
-                +{Math.max(0, revynRate - baselineRate)}% more revenue recovered
-              </span>
-            </span>
             <span className="text-[11px] font-mono text-[#64748B] bg-[#141C2E] px-2 py-0.5 rounded border border-[#1C273E]">
               Deterministic Engine
+            </span>
+          </div>
+
+          {/* Paired Bar Chart Container - Height increased to fill the box size */}
+          <div className="h-[250px] flex items-end justify-between gap-3 pt-6 pb-2 border-b border-[#1C273E]">
+            {chartData.map((d) => {
+              const isDayActive = activeDay === d.day;
+              return (
+                <div
+                  key={d.day}
+                  className="flex-1 flex flex-col items-center h-full justify-end group cursor-pointer"
+                  onMouseEnter={() => setActiveDay(d.day)}
+                  onMouseLeave={() => setActiveDay(null)}
+                  onClick={() => setActiveDay((prev) => (prev === d.day ? null : d.day))}
+                >
+                  <div className="w-full flex items-end justify-center gap-2 h-[200px]">
+                    {/* Revyn Bar (Electric Blue) */}
+                    <div
+                      className={`w-full max-w-[24px] rounded-t-md transition-all duration-300 relative ${
+                        isDayActive
+                          ? "bg-[#38BDF8] brightness-125 shadow-[0_0_16px_rgba(56,189,248,0.7)] scale-105"
+                          : "bg-[#0084FF] hover:brightness-125 shadow-[0_0_12px_rgba(0,132,255,0.45)]"
+                      }`}
+                      style={{ height: `${Math.max(15, d.revynVal)}%` }}
+                      title={`Revyn: ${d.revynVal}%`}
+                    >
+                      <span
+                        className={`transition-opacity absolute -top-6 left-1/2 -translate-x-1/2 text-[10px] font-mono font-bold text-[#38BDF8] bg-[#090D17] px-1 rounded border border-[#0084FF]/40 pointer-events-none whitespace-nowrap z-10 ${
+                          isDayActive ? "opacity-100 ring-1 ring-[#38BDF8]" : "opacity-0 group-hover:opacity-100"
+                        }`}
+                      >
+                        {d.revynVal}%
+                      </span>
+                    </div>
+
+                    {/* Baseline Bar (Neutral Slate) */}
+                    <div
+                      className={`w-full max-w-[24px] rounded-t-md transition-all duration-300 ${
+                        isDayActive
+                          ? "bg-[#475569] brightness-110"
+                          : "bg-[#334155] hover:bg-[#475569]"
+                      }`}
+                      style={{ height: `${Math.max(10, d.baseVal)}%` }}
+                      title={`Baseline: ${d.baseVal}%`}
+                    >
+                      <span
+                        className={`transition-opacity absolute -top-6 left-1/2 -translate-x-1/2 text-[10px] font-mono text-[#94A3B8] bg-[#090D17] px-1 rounded border border-[#334155] pointer-events-none whitespace-nowrap z-10 ${
+                          isDayActive ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                        }`}
+                      >
+                        {d.baseVal}%
+                      </span>
+                    </div>
+                  </div>
+                  <span
+                    className={`text-[11px] font-mono font-semibold mt-2.5 transition-colors ${
+                      isDayActive ? "text-[#38BDF8]" : "text-[#64748B]"
+                    }`}
+                  >
+                    {d.day}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Footer summary */}
+          <div className="flex items-center justify-between pt-3 text-[12px]">
+            <span className="text-[#94A3B8]">
+              {activeDayData ? (
+                <>
+                  Selected ({activeDayData.day}):{" "}
+                  <span className="font-bold font-mono text-emerald-400">
+                    +{activeDayData.revynVal - activeDayData.baseVal}% lift
+                  </span>{" "}
+                  over baseline
+                </>
+              ) : (
+                <>
+                  Estimated Lift:{" "}
+                  <span className="font-bold font-mono text-emerald-400">
+                    +{Math.max(0, revynRate - baselineRate)}% more revenue recovered
+                  </span>
+                </>
+              )}
+            </span>
+            <span className="text-[11px] font-mono text-[#64748B]">
+              Hover or click bars to inspect
             </span>
           </div>
         </div>
       </Panel>
 
-      {/* ── Panel 2: Root cause distribution (6 causes with slide bar indicators) ── */}
+      {/* ── Box 2: Root cause distribution (Side by Side, Vertically Centered) ── */}
       <Panel
         title="Root cause distribution"
         description="Categorized classification via Groq AI (Llama 3.3 70B) and deterministic pattern matching"
+        className="flex flex-col h-full"
+        contentClassName="flex-1 flex flex-col justify-center px-6 py-4"
       >
-        <div className="space-y-4 pt-1">
+        <div className="space-y-4 w-full">
           {distribution.map((item) => (
             <div key={item.key} className="space-y-1.5">
               <div className="flex items-center justify-between text-[13px]">

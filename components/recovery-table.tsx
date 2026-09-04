@@ -215,7 +215,7 @@ export function RecoveryTable({
                     </td>
 
                     {/* Updated */}
-                    <td className="py-4 px-5 text-[12px] font-mono text-[#94A3B8] whitespace-nowrap">
+                    <td suppressHydrationWarning className="py-4 px-5 text-[12px] font-mono text-[#94A3B8] whitespace-nowrap">
                       {formatDate(c.updated_at || c.created_at)}
                     </td>
 
