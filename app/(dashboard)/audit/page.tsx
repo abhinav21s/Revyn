@@ -14,30 +14,55 @@ export default function AuditPage() {
   const [logs, setLogs] = useState<AuditLog[]>(() => cachedAuditLogs || MOCK_AUDIT_LOGS);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    if (!cachedAuditLogs) {
-      loadAuditLogs();
-    }
-
-    const handleBatch = () => loadAuditLogs();
-    window.addEventListener("revyn:batch-completed", handleBatch);
-    return () => window.removeEventListener("revyn:batch-completed", handleBatch);
-  }, []);
-
-  const loadAuditLogs = async () => {
+  const loadAuditLogs = async (silent = false) => {
+    if (!silent) setLoading(true);
     try {
       const res = await fetch("/api/audit?limit=200");
       if (res.ok) {
         const data = await res.json();
-        if (data.logs && data.logs.length > 0) {
+        if (data.logs) {
           cachedAuditLogs = data.logs;
           setLogs(data.logs);
         }
       }
     } catch (e) {
       console.error("Using deterministic audit ledger:", e);
+    } finally {
+      if (!silent) setLoading(false);
     }
   };
+
+  useEffect(() => {
+    loadAuditLogs();
+
+    // Live continuous polling so new actions reflect immediately
+    const interval = setInterval(() => {
+      loadAuditLogs(true);
+    }, 2000);
+
+    const handleAction = () => loadAuditLogs(true);
+    const handleFocus = () => loadAuditLogs(true);
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") {
+        loadAuditLogs(true);
+      }
+    };
+
+    window.addEventListener("revyn:batch-completed", handleAction);
+    window.addEventListener("revyn:action-logged", handleAction);
+    window.addEventListener("revyn:case-updated", handleAction);
+    window.addEventListener("focus", handleFocus);
+    document.addEventListener("visibilitychange", handleVisibility);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("revyn:batch-completed", handleAction);
+      window.removeEventListener("revyn:action-logged", handleAction);
+      window.removeEventListener("revyn:case-updated", handleAction);
+      window.removeEventListener("focus", handleFocus);
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
+  }, []);
 
   return (
     <div className="space-y-6">

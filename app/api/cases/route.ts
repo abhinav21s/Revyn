@@ -17,7 +17,7 @@ export async function GET(request: Request) {
     let query = supabaseAdmin
       .from("payment_cases")
       .select("*", { count: "exact" })
-      .order("created_at", { ascending: false })
+      .order("updated_at", { ascending: false })
       .range(offset, offset + limit - 1);
 
     if (status && status !== "all") {

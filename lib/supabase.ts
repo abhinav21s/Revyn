@@ -171,8 +171,10 @@ class MockStore {
           _count: currentData.length,
           order(col: string, { ascending = true }: { ascending?: boolean } = {}) {
             queryObj._data.sort((a: any, b: any) => {
-              if (a[col] < b[col]) return ascending ? -1 : 1;
-              if (a[col] > b[col]) return ascending ? 1 : -1;
+              const valA = a[col] ?? a.updated_at ?? a.created_at ?? "";
+              const valB = b[col] ?? b.updated_at ?? b.created_at ?? "";
+              if (valA < valB) return ascending ? -1 : 1;
+              if (valA > valB) return ascending ? 1 : -1;
               return 0;
             });
             return queryObj;

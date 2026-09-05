@@ -64,7 +64,12 @@ export default function DashboardPage() {
   useEffect(() => {
     loadData();
 
-    // Listen to global batch completions, kill switch changes, and window focus
+    // Periodic telemetry refresh so table updates with new actions
+    const interval = setInterval(() => {
+      loadData();
+    }, 2500);
+
+    // Listen to global batch completions, action events, kill switch changes, and window focus
     const handleBatch = () => loadData();
     const handleFocus = () => loadData();
     const handleVisibility = () => {
@@ -74,12 +79,17 @@ export default function DashboardPage() {
     };
 
     window.addEventListener("revyn:batch-completed", handleBatch);
+    window.addEventListener("revyn:action-logged", handleBatch);
+    window.addEventListener("revyn:case-updated", handleBatch);
     window.addEventListener("revyn:kill-switch-changed", handleBatch);
     window.addEventListener("focus", handleFocus);
     document.addEventListener("visibilitychange", handleVisibility);
 
     return () => {
+      clearInterval(interval);
       window.removeEventListener("revyn:batch-completed", handleBatch);
+      window.removeEventListener("revyn:action-logged", handleBatch);
+      window.removeEventListener("revyn:case-updated", handleBatch);
       window.removeEventListener("revyn:kill-switch-changed", handleBatch);
       window.removeEventListener("focus", handleFocus);
       document.removeEventListener("visibilitychange", handleVisibility);

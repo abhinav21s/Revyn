@@ -28,7 +28,13 @@ export function RecoveryTable({
   const [filter, setFilter] = useState<string>("all");
   const [search, setSearch] = useState<string>("");
 
-  const filteredCases = cases.filter((c) => {
+  const sortedCases = [...cases].sort((a, b) => {
+    const timeA = new Date(a.updated_at || a.created_at || 0).getTime();
+    const timeB = new Date(b.updated_at || b.created_at || 0).getTime();
+    return timeB - timeA;
+  });
+
+  const filteredCases = sortedCases.filter((c) => {
     const statusMatch =
       filter === "all" ||
       c.status === filter ||

@@ -45,7 +45,11 @@ export function AuditLogViewer({
   const [stageFilter, setStageFilter] = useState("all");
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  const filteredLogs = logs.filter((log) => {
+  const sortedLogs = [...logs].sort(
+    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  );
+
+  const filteredLogs = sortedLogs.filter((log) => {
     const matchesStage = stageFilter === "all" || log.step === stageFilter;
     const s = search.toLowerCase();
     const matchesSearch =
@@ -152,7 +156,27 @@ export function AuditLogViewer({
                   );
                   const isRecovered = Boolean(recoveredLog);
 
-                  // 5 Stages data — MEASURE reflects actual recovery status
+                  // 5 Stages data — Live details extracted from the audit log record and its metadata
+                  const meta = (log.metadata as Record<string, any>) || {};
+                  const isCaseRecovered =
+                    log.step === "RECOVERED" ||
+                    isRecovered ||
+                    Boolean(meta.recovered);
+
+                  const detectedError =
+                    meta.error_description ||
+                    meta.error_code ||
+                    log.reason ||
+                    "Ingested failure event from Razorpay webhook / telemetry";
+
+                  const rootCauseDiag =
+                    meta.root_cause ||
+                    (log.reason?.includes("→") ? log.reason.split("→")[1]?.trim() : null) ||
+                    log.reason ||
+                    "Telemetry pattern analysis";
+
+                  const policyRuleTag = log.policy_rule || meta.rule || (log.action ? `POLICY_${log.action.toUpperCase().replace(/\s+/g, "_")}` : null);
+
                   const stages = [
                     {
                       key: "DETECT",
@@ -163,7 +187,7 @@ export function AuditLogViewer({
                       status: "OK",
                       statusType: "success",
                       policyTag: null,
-                      description: log.reason || `Ingested from Razorpay Test Mode webhook payment.failed · GATEWAY_ERROR / upstream_timeout`,
+                      description: `Ingested Event: ${detectedError}`,
                     },
                     {
                       key: "DIAGNOSE",
@@ -174,7 +198,7 @@ export function AuditLogViewer({
                       status: "OK",
                       statusType: "success",
                       policyTag: null,
-                      description: `Rule engine matched → Network error (confidence 0.81)`,
+                      description: `Root Cause Diagnosis: ${rootCauseDiag}${meta.confidence ? ` (confidence ${(Number(meta.confidence) * 100).toFixed(0)}%)` : ""}`,
                     },
                     {
                       key: "DECIDE",
@@ -184,8 +208,8 @@ export function AuditLogViewer({
                       timestamp: logDate,
                       status: "OK",
                       statusType: "success",
-                      policyTag: log.policy_rule ? `${log.policy_rule} (15m)` : "POLICY_BACKOFF_RETRY (15m)",
-                      description: `Policy engine selected action: ${log.action || "Smart retry"}`,
+                      policyTag: policyRuleTag,
+                      description: `Policy Decision: Selected ${log.action} · Rule: ${policyRuleTag || "STANDARD_POLICY"}`,
                     },
                     {
                       key: "EXECUTE",
@@ -196,20 +220,20 @@ export function AuditLogViewer({
                       status: "OK",
                       statusType: "success",
                       policyTag: null,
-                      description: `Bounded action dispatched: ${log.action || "Smart retry"}`,
+                      description: `Action Dispatched: ${log.action} · Actor: ${log.actor} · Reason: ${log.reason}`,
                     },
                     {
                       key: "MEASURE",
                       name: "MEASURE",
-                      icon: isRecovered ? CheckCircle2 : Server,
-                      iconColor: isRecovered ? "text-emerald-400" : "text-[#00A6FF]",
-                      timestamp: isRecovered ? formatDate(recoveredLog!.created_at) : logDate,
-                      status: isRecovered ? "Recovered" : "Waiting",
-                      statusType: isRecovered ? "success" : "waiting",
+                      icon: isCaseRecovered ? CheckCircle2 : Server,
+                      iconColor: isCaseRecovered ? "text-emerald-400" : "text-[#00A6FF]",
+                      timestamp: isCaseRecovered && recoveredLog ? formatDate(recoveredLog.created_at) : logDate,
+                      status: isCaseRecovered ? "Recovered" : "Recorded",
+                      statusType: isCaseRecovered ? "success" : "waiting",
                       policyTag: null,
-                      description: isRecovered
+                      description: isCaseRecovered
                         ? `Payment confirmed · Revenue recovered successfully via Razorpay`
-                        : `Awaiting payment confirmation`,
+                        : `Audit record secured in tamper-evident ledger · Status: ${log.step}`,
                     },
                   ];
 

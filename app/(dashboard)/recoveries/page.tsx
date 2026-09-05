@@ -19,7 +19,13 @@ export default function RecoveriesPage() {
   useEffect(() => {
     loadCases();
 
+    // Continuous polling so newly modified cases update live
+    const interval = setInterval(() => {
+      loadCases();
+    }, 2500);
+
     const handleBatch = () => loadCases();
+    const handleAction = () => loadCases();
     const handleFocus = () => loadCases();
     const handleVisibility = () => {
       if (document.visibilityState === "visible") {
@@ -28,11 +34,16 @@ export default function RecoveriesPage() {
     };
 
     window.addEventListener("revyn:batch-completed", handleBatch);
+    window.addEventListener("revyn:action-logged", handleAction);
+    window.addEventListener("revyn:case-updated", handleAction);
     window.addEventListener("focus", handleFocus);
     document.addEventListener("visibilitychange", handleVisibility);
 
     return () => {
+      clearInterval(interval);
       window.removeEventListener("revyn:batch-completed", handleBatch);
+      window.removeEventListener("revyn:action-logged", handleAction);
+      window.removeEventListener("revyn:case-updated", handleAction);
       window.removeEventListener("focus", handleFocus);
       document.removeEventListener("visibilitychange", handleVisibility);
     };

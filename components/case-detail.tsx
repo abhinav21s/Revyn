@@ -231,6 +231,10 @@ export function CaseDetail({ paymentCase, onClose, onCaseUpdated, inline = false
       if (res.ok) {
         setSimulated(true);
         fetchCaseLogs(paymentCase.id);
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("revyn:action-logged"));
+          window.dispatchEvent(new CustomEvent("revyn:case-updated"));
+        }
         if (onCaseUpdated) onCaseUpdated();
         emitToast(`Payment of ${formatCurrency(paymentCase.amount)} successfully marked as RECOVERED! Audit ledger updated.`, "success", 5000);
       } else {
@@ -261,6 +265,10 @@ export function CaseDetail({ paymentCase, onClose, onCaseUpdated, inline = false
       if (res.ok) {
         const data = await res.json();
         fetchCaseLogs(paymentCase.id);
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("revyn:action-logged"));
+          window.dispatchEvent(new CustomEvent("revyn:case-updated"));
+        }
         if (onCaseUpdated) onCaseUpdated();
         if (data.escalated) {
           emitToast(`3 failed attempts reached! Case #${paymentCase.id.slice(0, 8)} ESCALATED to human review.`, "warning", 6000);
@@ -288,6 +296,10 @@ export function CaseDetail({ paymentCase, onClose, onCaseUpdated, inline = false
       if (res.ok) {
         setSimulated(true);
         fetchCaseLogs(paymentCase.id);
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("revyn:action-logged"));
+          window.dispatchEvent(new CustomEvent("revyn:case-updated"));
+        }
         if (onCaseUpdated) onCaseUpdated();
         emitToast(`Escalated Case #${paymentCase.id.slice(0, 8)} resolved & marked as RECOVERED.`, "success", 5000);
       } else {
@@ -312,6 +324,10 @@ export function CaseDetail({ paymentCase, onClose, onCaseUpdated, inline = false
       });
       if (res.ok) {
         fetchCaseLogs(paymentCase.id);
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("revyn:action-logged"));
+          window.dispatchEvent(new CustomEvent("revyn:case-updated"));
+        }
         if (onCaseUpdated) onCaseUpdated();
         emitToast(`Escalated Case #${paymentCase.id.slice(0, 8)} closed & marked as STOPPED.`, "info", 5000);
       } else {
@@ -727,12 +743,20 @@ export function CaseDetail({ paymentCase, onClose, onCaseUpdated, inline = false
                     onSuccess: (res) => {
                       setSimulated(true);
                       fetchCaseLogs(paymentCase.id);
+                      if (typeof window !== "undefined") {
+                        window.dispatchEvent(new CustomEvent("revyn:action-logged"));
+                        window.dispatchEvent(new CustomEvent("revyn:case-updated"));
+                      }
                       if (onCaseUpdated) onCaseUpdated();
                       emitToast(`Payment authorized via Razorpay (${res.razorpay_payment_id})! Marked as RECOVERED.`, "success", 5000);
                       setLaunchingRzp(false);
                     },
                     onFailure: (res) => {
                       fetchCaseLogs(paymentCase.id);
+                      if (typeof window !== "undefined") {
+                        window.dispatchEvent(new CustomEvent("revyn:action-logged"));
+                        window.dispatchEvent(new CustomEvent("revyn:case-updated"));
+                      }
                       if (onCaseUpdated) onCaseUpdated();
                       emitToast(`Payment attempt failed (${res?.error?.description || "declined"}). Counter updated.`, "error", 4000);
                       setLaunchingRzp(false);
@@ -826,20 +850,27 @@ export function CaseDetail({ paymentCase, onClose, onCaseUpdated, inline = false
             </p>
           ) : (
             <div className="space-y-3.5 border-l-2 border-[#1C273E] ml-2 pl-4">
-              {logs.map((log) => (
-                <div key={log.id} className="relative text-[12px] space-y-1">
-                  <div className="absolute -left-[23px] top-1.5 w-2.5 h-2.5 rounded-full bg-[#0084FF] shadow-[0_0_8px_#0084FF]" />
-                  <div className="flex items-center gap-2 flex-wrap font-mono text-[11px]">
-                    <span className="font-bold text-[#F8FAFC]">
-                      [{log.step}] {log.action}
-                    </span>
-                    <span className="text-[#64748B]">{formatDate(log.created_at)}</span>
+              {[...logs]
+                .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+                .map((log) => (
+                  <div key={log.id} className="relative text-[12px] space-y-1">
+                    <div className="absolute -left-[23px] top-1.5 w-2.5 h-2.5 rounded-full bg-[#0084FF] shadow-[0_0_8px_#0084FF]" />
+                    <div className="flex items-center gap-2 flex-wrap font-mono text-[11px]">
+                      <span className="font-bold text-[#F8FAFC]">
+                        [{log.step}] {log.action}
+                      </span>
+                      {log.policy_rule && (
+                        <span className="px-1.5 py-0.2 rounded bg-[#0084FF]/10 text-[#38BDF8] border border-[#0084FF]/25 font-semibold text-[10px]">
+                          {log.policy_rule}
+                        </span>
+                      )}
+                      <span className="text-[#64748B]">{formatDate(log.created_at)}</span>
+                    </div>
+                    <p className="text-[12px] text-[#94A3B8] leading-relaxed">
+                      {log.reason}
+                    </p>
                   </div>
-                  <p className="text-[12px] text-[#94A3B8] leading-relaxed">
-                    {log.reason}
-                  </p>
-                </div>
-              ))}
+                ))}
             </div>
           )}
         </div>
