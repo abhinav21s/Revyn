@@ -1,12 +1,15 @@
 // ============================================================
 // GET /api/cases/sync
-// Verifies live Razorpay Payment Link status against Razorpay API
-// and automatically updates cases to RECOVERED when paid.
+// Returns current DB state of a case for the UI polling loop.
+// /api/recover already handles retry counter increments when
+// payment.failed fires via the Razorpay SDK.
+// This route also checks hosted payment link status for external
+// payments (Razorpay hosted link paid outside our SDK).
 // ============================================================
 
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
-import { fetchPaymentLink, fetchPaymentsForCase } from "@/lib/razorpay";
+import { fetchPaymentLink } from "@/lib/razorpay";
 import { writeAuditLog } from "@/lib/audit";
 
 export async function GET(request: Request) {
@@ -25,10 +28,12 @@ export async function GET(request: Request) {
         return NextResponse.json({ error: "Case not found" }, { status: 404 });
       }
 
+      // Already recovered — just return immediately
       if (c.status === "recovered") {
         return NextResponse.json({ recovered: true, status: "recovered", case: c });
       }
 
+      // Extract hosted payment link ID if available
       let linkId = c.payment_link_id;
       if (!linkId && c.payment_link_url) {
         const match = c.payment_link_url.match(/plink_[a-zA-Z0-9]+/);
@@ -37,7 +42,8 @@ export async function GET(request: Request) {
         }
       }
 
-      // 1. Check link status directly
+      // If a hosted payment link exists, check whether it has been paid externally.
+      // This covers the case where the customer paid via the rzp.io link in another tab.
       if (linkId) {
         const linkData = await fetchPaymentLink(linkId);
         if (linkData && (linkData.status === "paid" || (linkData.amount_paid && linkData.amount_paid > 0))) {
@@ -59,7 +65,7 @@ export async function GET(request: Request) {
             case_id: caseId,
             step: "RECOVERED",
             action: "razorpay_hosted_payment_verified",
-            reason: `Payment verified directly from Razorpay API. Paid: ₹${paidAmount / 100}`,
+            reason: `Payment verified directly from Razorpay hosted link API. Paid: ₹${paidAmount / 100}`,
             policy_rule: "RAZORPAY_API_SYNC",
             actor: "razorpay-api",
             metadata: {
@@ -73,91 +79,15 @@ export async function GET(request: Request) {
         }
       }
 
-      // 2. Check for payment attempts (failed/captured) from Razorpay Payments API
-      const casePayments = await fetchPaymentsForCase(caseId, linkId);
-      if (casePayments.length > 0) {
-        const successfulPayment = casePayments.find((p: any) => p.status === "captured" || p.status === "authorized");
-        if (successfulPayment) {
-          const paidAmount = successfulPayment.amount || c.amount;
-          const { data: updated } = await supabaseAdmin
-            .from("payment_cases")
-            .update({
-              status: "recovered",
-              recovered_at: new Date().toISOString(),
-              recovered_amount: paidAmount,
-              retry_count: Math.max((c.retry_count || 0) + 1, 1),
-              payment_link_id: linkId,
-            })
-            .eq("id", caseId)
-            .select()
-            .single();
-
-          await writeAuditLog({
-            case_id: caseId,
-            step: "RECOVERED",
-            action: "razorpay_payment_verified",
-            reason: `Payment verified via Razorpay payment ID ${successfulPayment.id}. Paid: ₹${paidAmount / 100}`,
-            policy_rule: "RAZORPAY_API_SYNC",
-            actor: "razorpay-api",
-          });
-
-          return NextResponse.json({ recovered: true, status: "recovered", case: updated });
-        }
-
-        // Count failed payments for this case
-        const failedPayments = casePayments.filter((p: any) => p.status === "failed");
-        if (failedPayments.length > 0 && failedPayments.length > (c.retry_count || 0)) {
-          const newRetryCount = failedPayments.length;
-          if (newRetryCount >= 3) {
-            const { data: updated } = await supabaseAdmin
-              .from("payment_cases")
-              .update({
-                status: "escalated",
-                retry_count: newRetryCount,
-                policy_action: "escalate_to_human",
-                policy_rule: "MAX_RETRY_LIMIT",
-                policy_reason: `Maximum retry limit of 3 reached (${newRetryCount} failed attempts on Razorpay link). Escalated to human review.`,
-              })
-              .eq("id", caseId)
-              .select()
-              .single();
-
-            await writeAuditLog({
-              case_id: caseId,
-              step: "DECIDE",
-              action: "escalate_to_human",
-              reason: `Payment attempt #${newRetryCount} failed on Razorpay link. Max retry limit reached (3/3) — case escalated to human review.`,
-              policy_rule: "MAX_RETRY_LIMIT",
-              actor: "revyn-executor",
-            });
-
-            return NextResponse.json({ recovered: false, status: "escalated", case: updated });
-          } else {
-            const { data: updated } = await supabaseAdmin
-              .from("payment_cases")
-              .update({ retry_count: newRetryCount })
-              .eq("id", caseId)
-              .select()
-              .single();
-
-            await writeAuditLog({
-              case_id: caseId,
-              step: "EXECUTE",
-              action: "payment_attempt_failed",
-              reason: `Payment attempt #${newRetryCount} of 3 failed on Razorpay link. Counter incremented.`,
-              policy_rule: "RETRY_COUNTER",
-              actor: "razorpay-gateway",
-            });
-
-            return NextResponse.json({ recovered: false, status: c.status, case: updated });
-          }
-        }
-      }
-
+      // Fast path: Return the current DB state.
+      // The retry_count is already up-to-date because /api/recover is called
+      // immediately when payment.failed fires via the Razorpay SDK checkout.
+      // The UI polling loop (checkSync) reads data.case.retry_count and
+      // data.case.status to detect changes without needing a Razorpay API call.
       return NextResponse.json({ recovered: false, status: c.status, case: c });
     }
 
-    // Sync all in-progress / pending cases with payment_link_id or payment_link_url
+    // Bulk sync: check all non-recovered cases that have hosted payment links
     const { data: pendingCases } = await supabaseAdmin
       .from("payment_cases")
       .select("*")

@@ -62,7 +62,7 @@ function PaymentGatewayContent() {
   useEffect(() => {
     if (paymentCase && !paid && !autoLaunched && paymentCase.status !== "recovered") {
       setAutoLaunched(true);
-      handleLaunchRazorpay();
+      handleLaunchRazorpay(paymentCase);
     }
   }, [paymentCase, paid, autoLaunched]);
 
@@ -92,16 +92,19 @@ function PaymentGatewayContent() {
     }
   };
 
-  const handleLaunchRazorpay = async () => {
+  const handleLaunchRazorpay = async (caseData?: PaymentCase | null) => {
     setLaunchingRzp(true);
-    const amount = paymentCase?.amount || 149900;
-    const name = paymentCase?.customer_name || "Customer";
-    const email = paymentCase?.customer_email || "customer@example.com";
-    const phone = paymentCase?.customer_phone || "9876543210";
+    // Use passed caseData (avoids stale closure when called from useEffect) or fall back to state
+    const activeCase = caseData ?? paymentCase;
+    const amount = activeCase?.amount || 149900;
+    const name = activeCase?.customer_name || "Customer";
+    const email = activeCase?.customer_email || "customer@example.com";
+    const phone = activeCase?.customer_phone || "9876543210";
+    const activeCaseId = activeCase?.id || caseId;
 
     const launched = await launchRazorpayCheckout({
       amount,
-      caseId: paymentCase?.id || caseId,
+      caseId: activeCaseId,
       customerName: name,
       customerEmail: email,
       customerPhone: phone,
@@ -256,7 +259,7 @@ function PaymentGatewayContent() {
 
               {/* Primary Action Button: Launch Razorpay Interface */}
               <button
-                onClick={handleLaunchRazorpay}
+                onClick={() => handleLaunchRazorpay()}
                 disabled={launchingRzp}
                 className="w-full py-4 rounded-xl bg-[#0084FF] hover:bg-[#0070DB] text-white text-[15px] font-bold transition-all shadow-[0_0_24px_rgba(0,132,255,0.45)] hover:shadow-[0_0_32px_rgba(0,132,255,0.65)] flex items-center justify-center gap-2 cursor-pointer active:scale-[0.98] disabled:opacity-60"
               >

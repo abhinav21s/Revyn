@@ -699,15 +699,16 @@ export function CaseDetail({ paymentCase, onClose, onCaseUpdated, inline = false
               >
                 {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
               </button>
-              <a
-                href={workingPaymentLink}
-                target="_blank"
-                rel="noreferrer"
+              <button
+                onClick={() => {
+                  const payUrl = `/pay?case_id=${paymentCase.id}`;
+                  window.open(payUrl, "_blank", "noreferrer");
+                }}
                 className="p-1.5 rounded-lg bg-[#141C2E] hover:bg-[#18233A] text-[#94A3B8] hover:text-[#F8FAFC] transition-colors cursor-pointer"
-                title="Open full page gateway"
+                title="Open payment page"
               >
                 <ExternalLink className="w-4 h-4" />
-              </a>
+              </button>
             </div>
 
             {/* Prominent Action Buttons: Pay via Razorpay + Open Page */}
@@ -752,7 +753,7 @@ export function CaseDetail({ paymentCase, onClose, onCaseUpdated, inline = false
               </button>
 
               <a
-                href={workingPaymentLink}
+                href={`/pay?case_id=${paymentCase.id}`}
                 target="_blank"
                 rel="noreferrer"
                 className="py-3.5 px-4 rounded-xl bg-[#141C2E] hover:bg-[#18233A] text-[#94A3B8] hover:text-[#F8FAFC] text-[13px] font-semibold border border-[#1C273E] flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
