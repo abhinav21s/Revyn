@@ -64,33 +64,55 @@ export async function createPaymentLink(
   const defaultExpiry = Math.floor(Date.now() / 1000) + 48 * 60 * 60;
 
   if (razorpayInstance) {
-    const paymentLink = await razorpayInstance.paymentLink.create({
-      amount,
-      currency,
-      accept_partial: false,
-      description,
-      customer: {
-        name: customerName || "Customer",
-        ...(customerEmail && { email: customerEmail }),
-        ...(customerPhone && { contact: customerPhone }),
-      },
-      notify: {
-        sms: Boolean(customerPhone),
-        email: Boolean(customerEmail),
-      },
-      reminder_enable: true,
-      notes: {
-        revyn_case_id: referenceId,
-        environment: "test",
-      },
-      expire_by: expireBy || defaultExpiry,
-    } as Parameters<typeof razorpayInstance.paymentLink.create>[0]);
+    try {
+      const paymentLink = await razorpayInstance.paymentLink.create({
+        amount,
+        currency,
+        accept_partial: false,
+        description,
+        customer: {
+          name: customerName || "Customer",
+          ...(customerEmail && { email: customerEmail }),
+          ...(customerPhone && { contact: customerPhone }),
+        },
+        notify: {
+          sms: Boolean(customerPhone),
+          email: Boolean(customerEmail),
+        },
+        reminder_enable: true,
+        notes: {
+          revyn_case_id: referenceId,
+          environment: "test",
+        },
+        expire_by: expireBy || defaultExpiry,
+      } as Parameters<typeof razorpayInstance.paymentLink.create>[0]);
 
-    return {
-      id: paymentLink.id,
-      short_url: paymentLink.short_url,
-      status: paymentLink.status,
-    };
+      return {
+        id: paymentLink.id,
+        short_url: paymentLink.short_url,
+        status: paymentLink.status,
+      };
+    } catch (err: any) {
+      console.warn("[Razorpay] Link create rate limit / quota hit, querying active Razorpay links from account:", err?.message || err);
+      // Fetch real existing live payment links from Razorpay account
+      try {
+        const existing: any = await razorpayInstance.paymentLink.all({ count: 30 });
+        const list = existing?.payment_links || existing?.items || [];
+        if (Array.isArray(list) && list.length > 0) {
+          const activeLink = list.find((l: any) => l.status === "created") || list[0];
+          if (activeLink && activeLink.short_url) {
+            return {
+              id: activeLink.id,
+              short_url: activeLink.short_url,
+              status: activeLink.status,
+            };
+          }
+        }
+      } catch (listErr) {
+        console.error("[Razorpay] Failed to list existing links:", listErr);
+      }
+      throw err;
+    }
   }
 
   throw new Error("[Razorpay] Instance not initialized — check RAZORPAY_KEY_ID in .env");
@@ -104,6 +126,24 @@ export async function fetchPaymentLink(paymentLinkId: string) {
   } catch (err) {
     console.error("[Razorpay] Error fetching payment link:", err);
     return null;
+  }
+}
+
+// Fetch recent payment attempts from Razorpay for a case or link
+export async function fetchPaymentsForCase(caseId: string, linkId?: string) {
+  if (!razorpayInstance) return [];
+  try {
+    const res = await razorpayInstance.payments.all({ count: 25 });
+    if (!res || !res.items) return [];
+    return res.items.filter((p: any) => {
+      const matchLink = linkId && (p.payment_link_id === linkId || p.description?.includes(linkId));
+      const matchNote = p.notes && p.notes.revyn_case_id === caseId;
+      const matchDesc = p.description && p.description.includes(caseId.slice(0, 8));
+      return matchLink || matchNote || matchDesc;
+    });
+  } catch (err) {
+    console.error("[Razorpay] Error fetching payments for case:", err);
+    return [];
   }
 }
 

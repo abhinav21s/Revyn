@@ -6,17 +6,22 @@ import { DashboardCharts } from "@/components/dashboard-charts";
 import { RecoveryTable } from "@/components/recovery-table";
 import { CaseDetail } from "@/components/case-detail";
 import { Panel } from "@/components/primitives";
-import { MOCK_CASES, MOCK_METRICS } from "@/lib/mock-data";
+
 import type { PaymentCase, BatchMetrics } from "@/lib/types";
 import { ArrowRight, ShieldAlert } from "lucide-react";
 import Link from "next/link";
 
+// In-memory cache across tab navigation so dashboard loads instantly with zero flicker
+let cachedMetrics: BatchMetrics | null = null;
+let cachedCases: PaymentCase[] = [];
+let cachedKillSwitch = false;
+
 export default function DashboardPage() {
-  const [metrics, setMetrics] = useState<BatchMetrics | null>(MOCK_METRICS);
-  const [cases, setCases] = useState<PaymentCase[]>(MOCK_CASES);
-  const [loading, setLoading] = useState(false);
+  const [metrics, setMetrics] = useState<BatchMetrics | null>(() => cachedMetrics);
+  const [cases, setCases] = useState<PaymentCase[]>(() => cachedCases);
+  const [loading, setLoading] = useState<boolean>(() => !cachedMetrics && cachedCases.length === 0);
   const [selectedCase, setSelectedCase] = useState<PaymentCase | null>(null);
-  const [killSwitchActive, setKillSwitchActive] = useState(false);
+  const [killSwitchActive, setKillSwitchActive] = useState<boolean>(() => cachedKillSwitch);
 
   const loadData = useCallback(async () => {
     try {
@@ -27,31 +32,57 @@ export default function DashboardPage() {
       ]);
       if (mRes.ok) {
         const m = await mRes.json();
-        if (m && m.total_cases > 0) setMetrics(m);
+        if (m) {
+          cachedMetrics = m;
+          setMetrics(m);
+        }
       }
       if (cRes.ok) {
         const d = await cRes.json();
-        if (d.cases && d.cases.length > 0) setCases(d.cases);
+        if (d.cases && d.cases.length > 0) {
+          cachedCases = d.cases;
+          setCases(d.cases);
+          setSelectedCase((prev) => {
+            if (!prev) return null;
+            return d.cases.find((c: PaymentCase) => c.id === prev.id) || prev;
+          });
+        }
       }
       if (sRes.ok) {
         const s = await sRes.json();
-        setKillSwitchActive(s.settings?.kill_switch === "true");
+        const active = s.settings?.kill_switch === "true";
+        cachedKillSwitch = active;
+        setKillSwitchActive(active);
       }
     } catch (e) {
       console.error("Failed to load live dashboard telemetry:", e);
+    } finally {
+      setLoading(false);
     }
   }, []);
 
   useEffect(() => {
     loadData();
 
-    // Listen to global batch completions and kill switch changes from the TopBar
+    // Listen to global batch completions, kill switch changes, and window focus
     const handleBatch = () => loadData();
+    const handleFocus = () => loadData();
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") {
+        loadData();
+      }
+    };
+
     window.addEventListener("revyn:batch-completed", handleBatch);
     window.addEventListener("revyn:kill-switch-changed", handleBatch);
+    window.addEventListener("focus", handleFocus);
+    document.addEventListener("visibilitychange", handleVisibility);
+
     return () => {
       window.removeEventListener("revyn:batch-completed", handleBatch);
       window.removeEventListener("revyn:kill-switch-changed", handleBatch);
+      window.removeEventListener("focus", handleFocus);
+      document.removeEventListener("visibilitychange", handleVisibility);
     };
   }, [loadData]);
 

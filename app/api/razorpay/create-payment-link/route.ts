@@ -9,9 +9,10 @@ import { supabaseAdmin } from "@/lib/supabase";
 import { writeAuditLog } from "@/lib/audit";
 
 export async function POST(request: Request) {
+  let case_id: string | undefined;
   try {
     const body = await request.json();
-    const { case_id } = body;
+    case_id = body?.case_id;
 
     if (!case_id) {
       return NextResponse.json({ error: "Missing case_id" }, { status: 400 });
@@ -48,6 +49,15 @@ export async function POST(request: Request) {
       (paymentCase.payment_link_url.includes("https://rzp.io/rzp/") ||
         paymentCase.payment_link_url.includes("https://rzp.io/i/plink_"))
     ) {
+      if (!paymentCase.payment_link_id) {
+        const match = paymentCase.payment_link_url.match(/plink_[a-zA-Z0-9]+/);
+        if (match) {
+          await supabaseAdmin
+            .from("payment_cases")
+            .update({ payment_link_id: match[0] })
+            .eq("id", paymentCase.id);
+        }
+      }
       return NextResponse.json({
         success: true,
         payment_link_url: paymentCase.payment_link_url,
@@ -92,8 +102,9 @@ export async function POST(request: Request) {
     });
   } catch (error: any) {
     console.error("[Create Payment Link API] Error:", error);
+
     return NextResponse.json(
-      { error: "Failed to create Razorpay payment link", details: String(error?.message || error) },
+      { error: "Failed to generate Razorpay link", details: String(error?.message || error) },
       { status: 500 }
     );
   }

@@ -8,6 +8,7 @@ export interface LaunchCheckoutParams {
   customerPhone?: string;
   merchantName?: string;
   onSuccess?: (response: { razorpay_payment_id: string; razorpay_order_id?: string; razorpay_signature?: string }) => void;
+  onFailure?: (response: any) => void;
   onDismiss?: () => void;
 }
 
@@ -45,6 +46,7 @@ export async function launchRazorpayCheckout({
   customerPhone = "9876543210",
   merchantName = "Revyn AI Revenue Recovery",
   onSuccess,
+  onFailure,
   onDismiss,
 }: LaunchCheckoutParams): Promise<boolean> {
   try {
@@ -157,9 +159,27 @@ export async function launchRazorpayCheckout({
 
     const rzp = new (window as any).Razorpay(options);
 
-    // Catch payment errors from Razorpay (e.g., bank decline)
-    rzp.on("payment.failed", function (response: any) {
-      console.error("[Razorpay] Payment failed:", response.error);
+    // Catch payment errors from Razorpay (e.g., bank decline, invalid OTP)
+    rzp.on("payment.failed", async function (response: any) {
+      const err = response?.error || {};
+      const errCode = err.code || "PAYMENT_FAILED";
+      const errDesc = err.description || err.reason || "Payment declined / failed";
+
+      try {
+        await fetch("/api/recover", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            case_id: caseId,
+            record_failure: true,
+            error_code: errCode,
+            error_description: errDesc,
+          }),
+        });
+      } catch {
+        // silent catch
+      }
+      if (onFailure) onFailure(response);
     });
 
     rzp.open();

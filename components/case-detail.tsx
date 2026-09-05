@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import type { PaymentCase, AuditLog } from "@/lib/types";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { StatusBadge, ActionTag } from "./status-badge";
@@ -17,6 +17,9 @@ import {
   MessageSquare,
   CreditCard,
   Lock,
+  AlertTriangle,
+  XCircle,
+  ShieldAlert,
 } from "lucide-react";
 import { emitToast } from "@/lib/toast";
 import { launchRazorpayCheckout } from "@/lib/razorpay-checkout";
@@ -43,24 +46,39 @@ const ROOT_CAUSE_LABELS: Record<string, string> = {
   unknown: "Unknown / Ambiguous",
 };
 
-// ── English Customer Recovery Messages per root cause (Professional & high-converting) ────
-function generateEnglishMessage(paymentCase: PaymentCase, workingLink: string): string {
+// ── Hinglish Customer Recovery Messages per root cause (Polite, no emojis) ────
+function generateHinglishMessage(paymentCase: PaymentCase, workingLink: string): string {
   const name = paymentCase.customer_name.split(" ")[0]; // First name
   const amount = formatCurrency(paymentCase.amount);
   const cause = paymentCase.root_cause || "unknown";
 
+  // Escalated transaction message (Polite, human review, NO payment link)
+  if (paymentCase.status === "escalated") {
+    return `Namaste ${name} ji, aapke ${amount} ke payment transaction ko hamari senior support team ko review ke liye bhej diya gaya hai. Hamare executive aapse jald hi sampark karenge aur is transaction ko complete karne mein madad karenge. Kisi bhi sahayata ke liye aap humse support par baat kar sakte hain. Dhanyavaad.`;
+  }
+
+  // Stopped / Unrecoverable transaction message (Polite, cancelled, NO payment link)
+  if (paymentCase.status === "unrecoverable" || paymentCase.status === "halted") {
+    return `Namaste ${name} ji, bank policy aur safety guidelines ke tahat aapka ${amount} ka transaction filhaal rok diya gaya hai. Aapke account se koi extra charge nahi kata hai. Agar aap dobara payment karna chahte hain toh kripya nayi request initiate karein. Dhanyavaad.`;
+  }
+
+  // Recovered transaction message (Thank you, receipt reference)
+  if (paymentCase.status === "recovered") {
+    return `Namaste ${name} ji, aapka ${amount} ka payment successfully recover aur verify ho gaya hai. Aapka transaction complete ho chuka hai. Humare saath judne ke liye dhanyavaad.`;
+  }
+
   const messages: Record<string, string> = {
-    insufficient_balance: `Hello ${name}, your payment of ${amount} could not be processed due to insufficient account balance. You can easily complete your payment via this secure Razorpay link: ${workingLink}. Please feel free to reach out if you need assistance. Thank you!`,
-    bank_timeout: `Hi ${name}, your payment of ${amount} timed out due to a temporary delay from your bank's server. No funds were deducted. Please retry and complete your payment here: ${workingLink}. It only takes a moment!`,
-    card_expired: `Hello ${name}, your payment of ${amount} did not go through because the card on file has expired. Please update your card details or pay directly using this secure link: ${workingLink}. Thank you!`,
-    invalid_cvv: `Hi ${name}, your payment of ${amount} could not be verified due to incorrect card details or CVV. Please verify your details and complete the transaction here: ${workingLink}.`,
-    mandate_revoked: `Hello ${name}, your autopay recurring mandate is currently inactive, so the payment of ${amount} was paused. You can complete this payment manually using this secure link: ${workingLink}. Thank you!`,
-    mandate_expired: `Hi ${name}, your autopay mandate has expired. Please complete your current payment of ${amount} using this link: ${workingLink}. You can also re-authorize autopay for future cycles.`,
-    upi_downtime: `Hello ${name}, your UPI payment of ${amount} was interrupted due to a temporary outage with the UPI banking switch. You can complete your transaction using Card, Netbanking, or another UPI app here: ${workingLink}.`,
-    network_error: `Hi ${name}, your payment of ${amount} was interrupted due to a temporary network connection issue. Please retry using this direct link: ${workingLink}.`,
-    customer_abandoned: `Hello ${name}, we noticed your payment of ${amount} was left incomplete. Whenever you're ready, you can easily finish your payment using this link: ${workingLink}. We are here to help!`,
-    subscription_failed: `Hi ${name}, your subscription renewal charge of ${amount} could not be processed. To keep your service active and uninterrupted, please complete payment here: ${workingLink}. Thank you!`,
-    unknown: `Hello ${name}, your payment of ${amount} could not be completed due to a temporary technical issue. Please use this secure link to complete the payment: ${workingLink}. Thank you!`,
+    insufficient_balance: `Namaste ${name} ji, aapka ${amount} ka payment account mein balance kam hone ke kaaran process nahi ho saka. Kripya is secure Razorpay link ke zariye apna payment complete karein: ${workingLink}. Koi bhi pareshani ho toh humse zaroor sampark karein. Dhanyavaad.`,
+    bank_timeout: `Namaste ${name} ji, aapka ${amount} ka payment aapke bank ke server mein thodi der ho jaane ki vajah se complete nahi ho saka. Koi paisa nahi kata hai. Kripya is link par jaakar dubara payment karein: ${workingLink}. Bahut asaan hai.`,
+    card_expired: `Namaste ${name} ji, aapka ${amount} ka payment is liye nahi hua kyunki aapka card expire ho gaya hai. Kripya nayi card details ke saath ya seedha is secure link se payment karein: ${workingLink}. Dhanyavaad.`,
+    invalid_cvv: `Namaste ${name} ji, aapka ${amount} ka payment card details verify nahi ho paane ke kaaran ruk gaya. Kripya apni card details check karke is link se transaction complete karein: ${workingLink}.`,
+    mandate_revoked: `Namaste ${name} ji, aapka autopay mandate filhaal active nahi hai, isliye ${amount} ka payment pause ho gaya hai. Aap is secure link se manually payment kar sakte hain: ${workingLink}. Dhanyavaad.`,
+    mandate_expired: `Namaste ${name} ji, aapka autopay mandate expire ho gaya hai. Kripya is link se apna ${amount} ka current payment complete karein: ${workingLink}. Aap chahen toh future ke liye dobara autopay bhi activate kar sakte hain.`,
+    upi_downtime: `Namaste ${name} ji, UPI switch mein thodi technical problem hone ki vajah se aapka ${amount} ka payment complete nahi ho saka. Aap card, netbanking, ya kisi aur UPI app se is link par jaakar payment kar sakte hain: ${workingLink}.`,
+    network_error: `Namaste ${name} ji, network connection mein ek choti si problem ki vajah se aapka ${amount} ka payment ruk gaya. Kripya is direct link se dubara koshish karein: ${workingLink}.`,
+    customer_abandoned: `Namaste ${name} ji, aapka ${amount} ka payment adhoora reh gaya tha. Jab bhi aap taiyaar hon, is link se payment asaani se complete kar sakte hain: ${workingLink}. Hum aapki madad ke liye hamesha yahan hain.`,
+    subscription_failed: `Namaste ${name} ji, aapka ${amount} ka subscription renewal charge process nahi ho saka. Aapki service bina kisi rukavat ke jaari rakhne ke liye, kripya yahan payment karein: ${workingLink}. Dhanyavaad.`,
+    unknown: `Namaste ${name} ji, ek temporary technical issue ki wajah se aapka ${amount} ka payment complete nahi ho saka. Kripya is secure link se payment karein: ${workingLink}. Dhanyavaad.`,
   };
 
   return messages[cause] || messages.unknown;
@@ -74,11 +92,19 @@ export function CaseDetail({ paymentCase, onClose, onCaseUpdated, inline = false
   const [simulating, setSimulating] = useState(false);
   const [simulated, setSimulated] = useState(false);
   const [launchingRzp, setLaunchingRzp] = useState(false);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   const [realPaymentLink, setRealPaymentLink] = useState<string>("");
   const [loadingLink, setLoadingLink] = useState(false);
 
+  const isEscalated = paymentCase?.status === "escalated";
+  const isStopped = paymentCase?.status === "unrecoverable" || paymentCase?.status === "halted";
   const isRecovered = paymentCase?.status === "recovered" || simulated;
+
+  const paymentCaseRef = useRef(paymentCase);
+  useEffect(() => {
+    paymentCaseRef.current = paymentCase;
+  });
 
   const fetchCaseLogs = async (caseId: string) => {
     setLoadingLogs(true);
@@ -100,13 +126,17 @@ export function CaseDetail({ paymentCase, onClose, onCaseUpdated, inline = false
       fetchCaseLogs(paymentCase.id);
       setSimulated(false);
 
+      if (isEscalated || isStopped) {
+        return;
+      }
+
       if (
         paymentCase.payment_link_url &&
         (paymentCase.payment_link_url.includes("https://rzp.io/rzp/") ||
           paymentCase.payment_link_url.includes("https://rzp.io/i/plink_"))
       ) {
         setRealPaymentLink(paymentCase.payment_link_url);
-      } else {
+      } else if (!isRecovered) {
         setLoadingLink(true);
         fetch("/api/razorpay/create-payment-link", {
           method: "POST",
@@ -121,32 +151,73 @@ export function CaseDetail({ paymentCase, onClose, onCaseUpdated, inline = false
           })
           .catch((err) => console.error("[Razorpay] Link fetch error:", err))
           .finally(() => setLoadingLink(false));
+      } else if (paymentCase.payment_link_url) {
+        setRealPaymentLink(paymentCase.payment_link_url);
       }
     }
-  }, [paymentCase?.id, paymentCase?.payment_link_url]);
+  }, [paymentCase?.id, paymentCase?.payment_link_url, isEscalated, isStopped, isRecovered]);
 
   useEffect(() => {
-    if (!paymentCase?.id || isRecovered) return;
+    if (!paymentCase?.id || isRecovered || isEscalated || isStopped) return;
 
-    const interval = setInterval(async () => {
+    let isMounted = true;
+
+    const checkSync = async () => {
+      const currentCase = paymentCaseRef.current;
+      if (!currentCase?.id) return;
+
       try {
-        const res = await fetch(`/api/cases/sync?case_id=${paymentCase.id}`);
-        if (res.ok) {
+        const res = await fetch(`/api/cases/sync?case_id=${currentCase.id}`);
+        if (res.ok && isMounted) {
           const data = await res.json();
           if (data.recovered) {
             setSimulated(true);
-            fetchCaseLogs(paymentCase.id);
+            fetchCaseLogs(currentCase.id);
             if (onCaseUpdated) onCaseUpdated();
-            emitToast(`Live Payment Verified via Razorpay! Case #${paymentCase.id.slice(0, 8)} marked as RECOVERED.`, "success", 5000);
+            emitToast(`Live Payment Verified via Razorpay! Case #${currentCase.id.slice(0, 8)} marked as RECOVERED.`, "success", 5000);
+          } else if (data.case) {
+            const statusChanged = data.case.status !== currentCase.status;
+            const retryIncreased = (data.case.retry_count || 0) > (currentCase.retry_count || 0);
+
+            if (statusChanged || retryIncreased) {
+              fetchCaseLogs(currentCase.id);
+              if (onCaseUpdated) onCaseUpdated();
+
+              if (data.case.status === "escalated" || data.status === "escalated") {
+                emitToast(`Payment failed on Razorpay link (3/3 attempts reached). Case escalated to human review.`, "error", 5000);
+              } else if (retryIncreased) {
+                emitToast(`Payment failed on Razorpay link. Attempt ${data.case.retry_count} of 3 recorded.`, "error", 4000);
+              }
+            }
           }
         }
       } catch {
         // silent polling catch
       }
-    }, 3000);
+    };
 
-    return () => clearInterval(interval);
-  }, [paymentCase?.id, isRecovered, onCaseUpdated]);
+    const interval = setInterval(checkSync, 1500);
+
+    const onFocus = () => {
+      checkSync();
+    };
+
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        checkSync();
+      }
+    };
+
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onVisibilityChange);
+
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+    };
+  }, [paymentCase?.id, isRecovered, isEscalated, isStopped, onCaseUpdated]);
 
   const handleSimulatePayment = async () => {
     if (!paymentCase) return;
@@ -173,26 +244,116 @@ export function CaseDetail({ paymentCase, onClose, onCaseUpdated, inline = false
     }
   };
 
+  const handleSimulateFailure = async () => {
+    if (!paymentCase) return;
+    setActionLoading("failure");
+    try {
+      const res = await fetch("/api/recover", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          case_id: paymentCase.id,
+          record_failure: true,
+          error_code: "BAD_REQUEST_PAYMENT_FAILED",
+          error_description: "Simulated payment attempt failure",
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        fetchCaseLogs(paymentCase.id);
+        if (onCaseUpdated) onCaseUpdated();
+        if (data.escalated) {
+          emitToast(`3 failed attempts reached! Case #${paymentCase.id.slice(0, 8)} ESCALATED to human review.`, "warning", 6000);
+        } else {
+          emitToast(`Payment attempt #${data.retry_count} failed. Counter incremented (${data.retry_count}/3).`, "info", 4000);
+        }
+      }
+    } catch (e) {
+      console.error(e);
+      emitToast("Network error recording failure.", "error");
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleMarkRecovered = async () => {
+    if (!paymentCase) return;
+    setActionLoading("recovered");
+    try {
+      const res = await fetch("/api/recover", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ case_id: paymentCase.id, action_override: "mark_recovered" }),
+      });
+      if (res.ok) {
+        setSimulated(true);
+        fetchCaseLogs(paymentCase.id);
+        if (onCaseUpdated) onCaseUpdated();
+        emitToast(`Escalated Case #${paymentCase.id.slice(0, 8)} resolved & marked as RECOVERED.`, "success", 5000);
+      } else {
+        emitToast("Failed to mark case as recovered.", "error");
+      }
+    } catch (e) {
+      console.error(e);
+      emitToast("Network error while updating case.", "error");
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleMarkStopped = async () => {
+    if (!paymentCase) return;
+    setActionLoading("stopped");
+    try {
+      const res = await fetch("/api/recover", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ case_id: paymentCase.id, action_override: "mark_stopped" }),
+      });
+      if (res.ok) {
+        fetchCaseLogs(paymentCase.id);
+        if (onCaseUpdated) onCaseUpdated();
+        emitToast(`Escalated Case #${paymentCase.id.slice(0, 8)} closed & marked as STOPPED.`, "info", 5000);
+      } else {
+        emitToast("Failed to mark case as stopped.", "error");
+      }
+    } catch (e) {
+      console.error(e);
+      emitToast("Network error while updating case.", "error");
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   if (!paymentCase) return null;
 
-  // Real, working Razorpay Hosted Payment Link (e.g. https://rzp.io/rzp/...)
+  // Working Razorpay Hosted Payment Link or direct checkout gateway
   const workingPaymentLink =
-    realPaymentLink ||
-    (paymentCase.payment_link_url && paymentCase.payment_link_url.startsWith("https://rzp.io/")
+    realPaymentLink && !realPaymentLink.includes("/rzp/revyn-")
+      ? realPaymentLink
+      : paymentCase.payment_link_url &&
+        (paymentCase.payment_link_url.includes("/i/plink_") ||
+          (paymentCase.payment_link_url.startsWith("http") && !paymentCase.payment_link_url.includes("/rzp/revyn-")))
       ? paymentCase.payment_link_url
-      : "");
+      : `/pay?case_id=${paymentCase.id}`;
 
   const copyPaymentLink = (url: string) => {
-    navigator.clipboard.writeText(url);
+    const fullUrl =
+      url.startsWith("/") && typeof window !== "undefined"
+        ? `${window.location.origin}${url}`
+        : url;
+    navigator.clipboard.writeText(fullUrl);
     setCopied(true);
     emitToast("Razorpay payment link copied to clipboard!", "info", 3000);
     setTimeout(() => setCopied(false), 2000);
   };
 
   const renderFormattedMessage = () => {
-    if (!workingPaymentLink) return englishMessage;
-    const parts = englishMessage.split(workingPaymentLink);
-    if (parts.length === 1) return englishMessage;
+    if (isEscalated || isStopped || isRecovered || !workingPaymentLink) {
+      return hinglishMessage;
+    }
+    const parts = hinglishMessage.split(workingPaymentLink);
+    if (parts.length === 1) return hinglishMessage;
     return (
       <span>
         {parts[0]}
@@ -214,7 +375,7 @@ export function CaseDetail({ paymentCase, onClose, onCaseUpdated, inline = false
   const diagnosisMethodLabel = paymentCase.diagnosis_method === "llm_groq"
     ? "Groq AI (Llama 3.3 70B)"
     : "Rule Engine (Deterministic)";
-  const englishMessage = generateEnglishMessage(paymentCase, workingPaymentLink);
+  const hinglishMessage = generateHinglishMessage(paymentCase, workingPaymentLink);
 
   const content = (
     <div className={`w-full flex flex-col ${inline ? "h-auto max-h-[calc(100vh-120px)] overflow-y-auto rounded-2xl border border-[#1C273E] bg-[#0F1523] shadow-2xl" : "w-full max-w-xl h-full bg-[#090D17] border-l border-[#1C273E] overflow-y-auto shadow-2xl animate-drawer"}`}>
@@ -261,14 +422,51 @@ export function CaseDetail({ paymentCase, onClose, onCaseUpdated, inline = false
           </div>
 
           {!isRecovered ? (
-            <button
-              onClick={handleSimulatePayment}
-              disabled={simulating}
-              className="px-4 py-2.5 rounded-xl text-[12px] font-bold bg-emerald-500 hover:bg-emerald-400 text-black flex items-center gap-2 shadow-lg shadow-emerald-500/20 active:scale-95 transition-all shrink-0 cursor-pointer"
-            >
-              {simulating ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
-              <span>{simulating ? "Processing…" : "Simulate Customer Paid"}</span>
-            </button>
+            isEscalated ? (
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleMarkRecovered}
+                  disabled={!!actionLoading}
+                  className="px-3 py-2 rounded-xl text-[12px] font-bold bg-emerald-500 hover:bg-emerald-400 text-black flex items-center gap-1.5 shadow-md shadow-emerald-500/20 active:scale-95 transition-all cursor-pointer disabled:opacity-50"
+                >
+                  {actionLoading === "recovered" ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
+                  <span>Mark as Recovered</span>
+                </button>
+                <button
+                  onClick={handleMarkStopped}
+                  disabled={!!actionLoading}
+                  className="px-3 py-2 rounded-xl text-[12px] font-bold bg-red-600/20 hover:bg-red-600/30 text-red-400 border border-red-500/30 flex items-center gap-1.5 active:scale-95 transition-all cursor-pointer disabled:opacity-50"
+                >
+                  {actionLoading === "stopped" ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <XCircle className="w-3.5 h-3.5" />}
+                  <span>Mark as Stopped</span>
+                </button>
+              </div>
+            ) : isStopped ? (
+              <div className="px-3.5 py-1.5 rounded-full text-[12px] font-bold bg-red-500/12 text-red-400 border border-red-500/30 flex items-center gap-1.5 shrink-0 shadow-[0_0_12px_rgba(239,68,68,0.15)]">
+                <AlertTriangle className="w-4 h-4" />
+                <span>Stopped</span>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-2 w-full sm:w-auto shrink-0 min-w-[190px]">
+                <button
+                  onClick={handleSimulatePayment}
+                  disabled={simulating || !!actionLoading}
+                  className="w-full px-3.5 py-2.5 rounded-xl text-[12px] font-bold bg-emerald-500 hover:bg-emerald-400 text-black flex items-center justify-center gap-1.5 shadow-lg shadow-emerald-500/20 active:scale-95 transition-all cursor-pointer"
+                >
+                  {simulating ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+                  <span>{simulating ? "Processing…" : "Simulate Customer Paid"}</span>
+                </button>
+                <button
+                  onClick={handleSimulateFailure}
+                  disabled={simulating || !!actionLoading}
+                  title="Simulate a failed payment attempt to test retry counter & 3-retry auto escalation"
+                  className="w-full px-3 py-2 rounded-xl text-[11px] font-bold bg-red-600/15 hover:bg-red-600/25 text-red-400 border border-red-500/30 flex items-center justify-center gap-1.5 active:scale-95 transition-all cursor-pointer"
+                >
+                  {actionLoading === "failure" ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <XCircle className="w-3.5 h-3.5" />}
+                  <span>Simulate Failure</span>
+                </button>
+              </div>
+            )
           ) : (
             <div className="px-3.5 py-1.5 rounded-full text-[12px] font-bold bg-emerald-500/12 text-emerald-400 border border-emerald-500/30 flex items-center gap-1.5 shrink-0 shadow-[0_0_12px_rgba(16,185,129,0.15)]">
               <CheckCircle2 className="w-4 h-4" />
@@ -364,97 +562,207 @@ export function CaseDetail({ paymentCase, onClose, onCaseUpdated, inline = false
           </div>
         </div>
 
-        {/* Razorpay Recovery Link Section (Always Available) */}
-        <div className="p-5 rounded-2xl border border-[#1C273E] bg-[#090D17] space-y-3 shadow-md">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <CreditCard className="w-4 h-4 text-[#0084FF]" />
-              <span className="text-[14px] font-bold text-[#F8FAFC]">
-                Razorpay Recovery Link
+        {/* ── Conditional Action Section based on Status ── */}
+        {isRecovered ? (
+          /* Recovered / Settled Case Box (Active link, not disabled) */
+          <div className="p-5 rounded-2xl border border-emerald-500/30 bg-emerald-950/15 space-y-3.5 shadow-lg shadow-emerald-950/20">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                <span className="text-[14px] font-bold text-[#F8FAFC]">
+                  Payment Settled &amp; Recovered
+                </span>
+              </div>
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                RECOVERED
               </span>
             </div>
-            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-500/10 text-amber-400 border border-amber-500/30">
-              TEST MODE
-            </span>
-          </div>
 
-          {/* URL text row */}
-          <div className="flex items-center gap-2 p-3 rounded-xl border border-[#1C273E] bg-[#06080F] font-mono text-[12px]">
-            <span className="truncate flex-1 text-[#0084FF]">
-              {loadingLink ? (
-                <span className="text-[#64748B] flex items-center gap-1.5 font-sans italic">
-                  <RefreshCw className="w-3.5 h-3.5 animate-spin text-[#0084FF]" />
-                  Generating Razorpay live payment link…
+            <p className="text-[12px] text-[#94A3B8] leading-relaxed">
+              This transaction has been successfully recovered and settled. The payment record and receipt link remain accessible below.
+            </p>
+
+            {workingPaymentLink && (
+              <div className="flex items-center gap-2 p-3 rounded-xl border border-emerald-500/20 bg-[#06080F] font-mono text-[12px]">
+                <span className="truncate flex-1 text-emerald-400">
+                  {workingPaymentLink}
                 </span>
-              ) : (
-                workingPaymentLink
-              )}
-            </span>
-            <button
-              onClick={() => copyPaymentLink(workingPaymentLink)}
-              disabled={loadingLink || !workingPaymentLink}
-              className="p-1.5 rounded-lg bg-[#141C2E] hover:bg-[#18233A] text-[#94A3B8] hover:text-[#F8FAFC] transition-colors cursor-pointer disabled:opacity-50"
-              title="Copy link"
-            >
-              {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
-            </button>
-            <a
-              href={workingPaymentLink}
-              target="_blank"
-              rel="noreferrer"
-              className="p-1.5 rounded-lg bg-[#141C2E] hover:bg-[#18233A] text-[#94A3B8] hover:text-[#F8FAFC] transition-colors cursor-pointer"
-              title="Open full page gateway"
-            >
-              <ExternalLink className="w-4 h-4" />
-            </a>
+                <button
+                  onClick={() => copyPaymentLink(workingPaymentLink)}
+                  className="p-1.5 rounded-lg bg-[#141C2E] hover:bg-[#18233A] text-[#94A3B8] hover:text-[#F8FAFC] transition-colors cursor-pointer"
+                  title="Copy link"
+                >
+                  {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                </button>
+                <a
+                  href={workingPaymentLink}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="p-1.5 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 hover:text-emerald-300 transition-colors cursor-pointer flex items-center gap-1.5 text-[11px] font-semibold px-3"
+                  title="Open Payment / Receipt Link"
+                >
+                  <span>Open Link</span>
+                  <ExternalLink className="w-3.5 h-3.5" />
+                </a>
+              </div>
+            )}
           </div>
+        ) : isEscalated ? (
+          /* Escalated Case Resolution Action Box (No Payment Option) */
+          <div className="p-5 rounded-2xl border border-amber-500/30 bg-amber-950/15 space-y-4 shadow-lg shadow-amber-950/20">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <ShieldAlert className="w-4 h-4 text-amber-400" />
+                <span className="text-[14px] font-bold text-[#F8FAFC]">
+                  Escalated Case Resolution
+                </span>
+              </div>
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-500/15 text-amber-400 border border-amber-500/30">
+                HUMAN REVIEW
+              </span>
+            </div>
 
-          {/* Prominent Action Buttons: Pay via Razorpay + Open Page */}
-          <div className="flex flex-col sm:flex-row gap-2 pt-1">
-            <button
-              onClick={async () => {
-                setLaunchingRzp(true);
-                emitToast("Opening Razorpay payment interface...", "info", 2500);
-                const launched = await launchRazorpayCheckout({
-                  amount: paymentCase.amount,
-                  caseId: paymentCase.id,
-                  customerName: paymentCase.customer_name,
-                  customerEmail: paymentCase.customer_email,
-                  customerPhone: paymentCase.customer_phone,
-                  merchantName: paymentCase.merchant_id.replace("merchant_", "").toUpperCase(),
-                  onSuccess: (res) => {
-                    setSimulated(true);
-                    fetchCaseLogs(paymentCase.id);
-                    if (onCaseUpdated) onCaseUpdated();
-                    emitToast(`Payment authorized via Razorpay (${res.razorpay_payment_id})! Marked as RECOVERED.`, "success", 5000);
-                    setLaunchingRzp(false);
-                  },
-                  onDismiss: () => setLaunchingRzp(false),
-                });
-                if (!launched) setLaunchingRzp(false);
-              }}
-              disabled={launchingRzp}
-              className="flex-1 py-3.5 px-4 rounded-xl bg-[#0084FF] hover:bg-[#0070DB] text-white text-[13px] font-bold transition-all shadow-[0_0_18px_rgba(0,132,255,0.4)] hover:shadow-[0_0_24px_rgba(0,132,255,0.6)] flex items-center justify-center gap-2 cursor-pointer active:scale-95 disabled:opacity-60"
-            >
-              {launchingRzp ? (
-                <RefreshCw className="w-4 h-4 animate-spin" />
-              ) : (
-                <Lock className="w-4 h-4" />
-              )}
-              <span>{launchingRzp ? "Opening Razorpay…" : "Pay via Razorpay"}</span>
-            </button>
+            <p className="text-[12px] text-[#94A3B8] leading-relaxed">
+              This transaction was escalated for manual review (max retry threshold of 3 attempts reached or policy mandate rule). Automated payments are disabled. Choose an operator action:
+            </p>
 
-            <a
-              href={workingPaymentLink}
-              target="_blank"
-              rel="noreferrer"
-              className="py-3.5 px-4 rounded-xl bg-[#141C2E] hover:bg-[#18233A] text-[#94A3B8] hover:text-[#F8FAFC] text-[13px] font-semibold border border-[#1C273E] flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
-            >
-              <span>Open Link</span>
-              <ExternalLink className="w-3.5 h-3.5" />
-            </a>
+            <div className="flex flex-col sm:flex-row gap-3 pt-1">
+              <button
+                onClick={handleMarkRecovered}
+                disabled={!!actionLoading}
+                className="flex-1 py-3 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black text-[13px] font-bold transition-all shadow-[0_0_16px_rgba(16,185,129,0.3)] hover:shadow-[0_0_20px_rgba(16,185,129,0.5)] flex items-center justify-center gap-2 cursor-pointer active:scale-95 disabled:opacity-60"
+              >
+                {actionLoading === "recovered" ? <RefreshCw className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+                <span>Mark as Recovered</span>
+              </button>
+
+              <button
+                onClick={handleMarkStopped}
+                disabled={!!actionLoading}
+                className="flex-1 py-3 px-4 rounded-xl bg-red-600/20 hover:bg-red-600/35 text-red-400 text-[13px] font-bold border border-red-500/40 flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-95 disabled:opacity-60"
+              >
+                {actionLoading === "stopped" ? <RefreshCw className="w-4 h-4 animate-spin" /> : <XCircle className="w-4 h-4" />}
+                <span>Mark as Stopped</span>
+              </button>
+            </div>
           </div>
-        </div>
+        ) : isStopped ? (
+          /* Stopped / Unrecoverable Case Box (No Payment Option) */
+          <div className="p-5 rounded-2xl border border-red-500/30 bg-red-950/15 space-y-2.5 shadow-md">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 text-red-400" />
+                <span className="text-[14px] font-bold text-[#F8FAFC]">
+                  Recovery Action Stopped
+                </span>
+              </div>
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-red-500/15 text-red-400 border border-red-500/30">
+                STOPPED
+              </span>
+            </div>
+            <p className="text-[12px] text-[#94A3B8] leading-relaxed">
+              This transaction was marked as stopped / unrecoverable by deterministic guardrails. Automated and manual payment collection is disabled.
+            </p>
+          </div>
+        ) : (
+          /* Razorpay Recovery Link Section (Active for recoverable in-progress / pending cases) */
+          <div className="p-5 rounded-2xl border border-[#1C273E] bg-[#090D17] space-y-3 shadow-md">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <CreditCard className="w-4 h-4 text-[#0084FF]" />
+                <span className="text-[14px] font-bold text-[#F8FAFC]">
+                  Razorpay Recovery Link
+                </span>
+              </div>
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-500/10 text-amber-400 border border-amber-500/30">
+                TEST MODE
+              </span>
+            </div>
+
+            {/* URL text row */}
+            <div className="flex items-center gap-2 p-3 rounded-xl border border-[#1C273E] bg-[#06080F] font-mono text-[12px]">
+              <span className="truncate flex-1 text-[#0084FF]">
+                {loadingLink ? (
+                  <span className="text-[#64748B] flex items-center gap-1.5 font-sans italic">
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin text-[#0084FF]" />
+                    Generating Razorpay live payment link…
+                  </span>
+                ) : (
+                  workingPaymentLink
+                )}
+              </span>
+              <button
+                onClick={() => copyPaymentLink(workingPaymentLink)}
+                disabled={loadingLink || !workingPaymentLink}
+                className="p-1.5 rounded-lg bg-[#141C2E] hover:bg-[#18233A] text-[#94A3B8] hover:text-[#F8FAFC] transition-colors cursor-pointer disabled:opacity-50"
+                title="Copy link"
+              >
+                {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+              </button>
+              <a
+                href={workingPaymentLink}
+                target="_blank"
+                rel="noreferrer"
+                className="p-1.5 rounded-lg bg-[#141C2E] hover:bg-[#18233A] text-[#94A3B8] hover:text-[#F8FAFC] transition-colors cursor-pointer"
+                title="Open full page gateway"
+              >
+                <ExternalLink className="w-4 h-4" />
+              </a>
+            </div>
+
+            {/* Prominent Action Buttons: Pay via Razorpay + Open Page */}
+            <div className="flex flex-col sm:flex-row gap-2 pt-1">
+              <button
+                onClick={async () => {
+                  setLaunchingRzp(true);
+                  emitToast("Opening Razorpay payment interface...", "info", 2500);
+                  const launched = await launchRazorpayCheckout({
+                    amount: paymentCase.amount,
+                    caseId: paymentCase.id,
+                    customerName: paymentCase.customer_name,
+                    customerEmail: paymentCase.customer_email,
+                    customerPhone: paymentCase.customer_phone,
+                    merchantName: paymentCase.merchant_id.replace("merchant_", "").toUpperCase(),
+                    onSuccess: (res) => {
+                      setSimulated(true);
+                      fetchCaseLogs(paymentCase.id);
+                      if (onCaseUpdated) onCaseUpdated();
+                      emitToast(`Payment authorized via Razorpay (${res.razorpay_payment_id})! Marked as RECOVERED.`, "success", 5000);
+                      setLaunchingRzp(false);
+                    },
+                    onFailure: (res) => {
+                      fetchCaseLogs(paymentCase.id);
+                      if (onCaseUpdated) onCaseUpdated();
+                      emitToast(`Payment attempt failed (${res?.error?.description || "declined"}). Counter updated.`, "error", 4000);
+                      setLaunchingRzp(false);
+                    },
+                    onDismiss: () => setLaunchingRzp(false),
+                  });
+                  if (!launched) setLaunchingRzp(false);
+                }}
+                disabled={launchingRzp}
+                className="flex-1 py-3.5 px-4 rounded-xl bg-[#0084FF] hover:bg-[#0070DB] text-white text-[13px] font-bold transition-all shadow-[0_0_18px_rgba(0,132,255,0.4)] hover:shadow-[0_0_24px_rgba(0,132,255,0.6)] flex items-center justify-center gap-2 cursor-pointer active:scale-95 disabled:opacity-60"
+              >
+                {launchingRzp ? (
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Lock className="w-4 h-4" />
+                )}
+                <span>{launchingRzp ? "Opening Razorpay…" : "Pay via Razorpay"}</span>
+              </button>
+
+              <a
+                href={workingPaymentLink}
+                target="_blank"
+                rel="noreferrer"
+                className="py-3.5 px-4 rounded-xl bg-[#141C2E] hover:bg-[#18233A] text-[#94A3B8] hover:text-[#F8FAFC] text-[13px] font-semibold border border-[#1C273E] flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+              >
+                <span>Open Link</span>
+                <ExternalLink className="w-3.5 h-3.5" />
+              </a>
+            </div>
+          </div>
+        )}
 
         {/* Customer Recovery Message (English, Professional, Working link) */}
         <div className="p-5 rounded-2xl border border-[#1C273E] bg-[#090D17] space-y-3">
@@ -466,7 +774,7 @@ export function CaseDetail({ paymentCase, onClose, onCaseUpdated, inline = false
               </h4>
             </div>
             <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#0084FF]/10 text-[#38BDF8] border border-[#0084FF]/30">
-              English · WhatsApp / SMS
+              Hinglish · WhatsApp / SMS
             </span>
           </div>
 
@@ -476,7 +784,7 @@ export function CaseDetail({ paymentCase, onClose, onCaseUpdated, inline = false
 
           <div className="flex items-center gap-2">
             <a
-              href={`https://wa.me/?text=${encodeURIComponent(englishMessage)}`}
+              href={`https://wa.me/?text=${encodeURIComponent(hinglishMessage)}`}
               target="_blank"
               rel="noreferrer"
               className="flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 hover:text-emerald-300 text-[12px] font-semibold transition-colors cursor-pointer border border-emerald-500/30"
@@ -488,7 +796,7 @@ export function CaseDetail({ paymentCase, onClose, onCaseUpdated, inline = false
 
             <button
               onClick={() => {
-                navigator.clipboard.writeText(englishMessage);
+                navigator.clipboard.writeText(hinglishMessage);
                 setMsgCopied(true);
                 emitToast("Customer recovery message copied to clipboard!", "info", 3000);
                 setTimeout(() => setMsgCopied(false), 2000);

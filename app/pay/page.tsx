@@ -112,8 +112,13 @@ function PaymentGatewayContent() {
         setPaid(true);
         setLaunchingRzp(false);
       },
+      onFailure: () => {
+        setLaunchingRzp(false);
+        fetchCase();
+      },
       onDismiss: () => {
         setLaunchingRzp(false);
+        fetchCase();
       },
     });
 

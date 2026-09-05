@@ -30,8 +30,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Case not found" }, { status: 404 });
     }
 
-    // If simulate_recovery is true (Demo helper to simulate customer paying the link)
-    if (simulate_recovery) {
+    // ── 1. Manual Escalation Action: Mark as Recovered ──────────────────
+    if (action_override === "mark_recovered") {
       const recoveredAmount = paymentCase.amount;
       await supabaseAdmin
         .from("payment_cases")
@@ -39,6 +39,128 @@ export async function POST(request: Request) {
           status: "recovered",
           recovered_amount: recoveredAmount,
           recovered_at: new Date().toISOString(),
+          retry_count: Math.max(paymentCase.retry_count || 0, 1),
+        })
+        .eq("id", case_id);
+
+      await writeAuditLog({
+        case_id: case_id,
+        step: "RECOVERED",
+        action: "manual_escalation_recovered",
+        reason: `Escalated case manually resolved and marked as RECOVERED by operator. Recovered ₹${recoveredAmount / 100}.`,
+        policy_rule: "HUMAN_OVERRIDE",
+        actor: "human-operator",
+        metadata: { amount: recoveredAmount },
+      });
+
+      return NextResponse.json({
+        success: true,
+        status: "recovered",
+        message: "Escalated case marked as recovered successfully",
+      });
+    }
+
+    // ── 2. Manual Escalation Action: Mark as Stopped ────────────────────
+    if (action_override === "mark_stopped") {
+      await supabaseAdmin
+        .from("payment_cases")
+        .update({
+          status: "unrecoverable",
+          policy_action: "mark_unrecoverable",
+          policy_reason: "Escalated case manually closed and marked as STOPPED by operator.",
+          policy_rule: "HUMAN_OVERRIDE",
+        })
+        .eq("id", case_id);
+
+      await writeAuditLog({
+        case_id: case_id,
+        step: "DECIDE",
+        action: "manual_escalation_stopped",
+        reason: "Escalated case manually closed and marked as STOPPED by operator.",
+        policy_rule: "HUMAN_OVERRIDE",
+        actor: "human-operator",
+      });
+
+      return NextResponse.json({
+        success: true,
+        status: "unrecoverable",
+        message: "Escalated case marked as stopped successfully",
+      });
+    }
+
+    // ── 3. Record Payment Failure (Increments retry counter & auto-escalates at 3) ──
+    if (body.record_failure || action_override === "record_failure") {
+      const newRetryCount = (paymentCase.retry_count || 0) + 1;
+      const errorDesc = body.error_description || body.error_message || "Transaction declined / failed via gateway";
+
+      if (newRetryCount >= 3) {
+        await supabaseAdmin
+          .from("payment_cases")
+          .update({
+            status: "escalated",
+            retry_count: newRetryCount,
+            policy_action: "escalate_to_human",
+            policy_rule: "MAX_RETRY_LIMIT",
+            policy_reason: `Maximum retry limit of 3 reached (${newRetryCount} failed attempts). Escalated to human review queue.`,
+          })
+          .eq("id", case_id);
+
+        await writeAuditLog({
+          case_id: case_id,
+          step: "DECIDE",
+          action: "escalate_to_human",
+          reason: `Payment attempt #${newRetryCount} failed (${errorDesc}). Maximum retry limit of 3 reached — case escalated to human review queue.`,
+          policy_rule: "MAX_RETRY_LIMIT",
+          actor: "revyn-executor",
+          metadata: { retry_count: newRetryCount, error_code: body.error_code, error_description: errorDesc },
+        });
+
+        return NextResponse.json({
+          success: true,
+          status: "escalated",
+          retry_count: newRetryCount,
+          escalated: true,
+          message: "Payment attempt failed. Maximum 3 retries reached — case escalated to human review.",
+        });
+      } else {
+        await supabaseAdmin
+          .from("payment_cases")
+          .update({
+            retry_count: newRetryCount,
+          })
+          .eq("id", case_id);
+
+        await writeAuditLog({
+          case_id: case_id,
+          step: "EXECUTE",
+          action: "payment_attempt_failed",
+          reason: `Payment attempt #${newRetryCount} of 3 failed: ${errorDesc}. Counter incremented.`,
+          policy_rule: "RETRY_COUNTER",
+          actor: "razorpay-gateway",
+          metadata: { retry_count: newRetryCount, error_code: body.error_code, error_description: errorDesc },
+        });
+
+        return NextResponse.json({
+          success: true,
+          status: paymentCase.status,
+          retry_count: newRetryCount,
+          escalated: false,
+          message: `Payment attempt #${newRetryCount} failed. Counter updated.`,
+        });
+      }
+    }
+
+    // ── 4. Simulate Recovery (Successful Payment) ────────────────────────
+    if (simulate_recovery) {
+      const recoveredAmount = paymentCase.amount;
+      const newRetryCount = (paymentCase.retry_count || 0) + 1;
+      await supabaseAdmin
+        .from("payment_cases")
+        .update({
+          status: "recovered",
+          recovered_amount: recoveredAmount,
+          recovered_at: new Date().toISOString(),
+          retry_count: newRetryCount,
         })
         .eq("id", case_id);
 
@@ -46,16 +168,17 @@ export async function POST(request: Request) {
         case_id: case_id,
         step: "RECOVERED",
         action: "manual_simulation_paid",
-        reason: `Payment simulated as paid by operator. Recovered ₹${recoveredAmount / 100}.`,
+        reason: `Payment verified and marked as paid by operator. Recovered ₹${recoveredAmount / 100}.`,
         policy_rule: "MANUAL_SIMULATION",
         actor: "operator",
-        metadata: { amount: recoveredAmount },
+        metadata: { amount: recoveredAmount, retry_count: newRetryCount },
       });
 
       return NextResponse.json({
         success: true,
         message: "Payment marked as recovered successfully",
         recovered_amount: recoveredAmount,
+        retry_count: newRetryCount,
       });
     }
 

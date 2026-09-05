@@ -124,7 +124,7 @@ export function BatchRunner({
               Batch size:
             </span>
             <div className="inline-flex items-center bg-[#0B0F19] border border-[#2E3A52] rounded-[10px] p-1">
-              {[10, 20, 50].map((size) => {
+              {[5, 10, 20, 50].map((size) => {
                 const isSelected = batchSize === size;
                 return (
                   <button

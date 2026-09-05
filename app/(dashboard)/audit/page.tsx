@@ -7,12 +7,17 @@ import { MOCK_AUDIT_LOGS } from "@/lib/mock-data";
 import type { AuditLog } from "@/lib/types";
 import { ShieldCheck } from "lucide-react";
 
+// In-memory cache for audit records across tab navigation
+let cachedAuditLogs: AuditLog[] | null = null;
+
 export default function AuditPage() {
-  const [logs, setLogs] = useState<AuditLog[]>(MOCK_AUDIT_LOGS);
+  const [logs, setLogs] = useState<AuditLog[]>(() => cachedAuditLogs || MOCK_AUDIT_LOGS);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    loadAuditLogs();
+    if (!cachedAuditLogs) {
+      loadAuditLogs();
+    }
 
     const handleBatch = () => loadAuditLogs();
     window.addEventListener("revyn:batch-completed", handleBatch);
@@ -25,6 +30,7 @@ export default function AuditPage() {
       if (res.ok) {
         const data = await res.json();
         if (data.logs && data.logs.length > 0) {
+          cachedAuditLogs = data.logs;
           setLogs(data.logs);
         }
       }

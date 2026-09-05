@@ -96,7 +96,7 @@ export function TopBar({ onToggleSidebar, onRunBatchTrigger }: TopBarProps) {
     }
   };
 
-  const batchSizes = [10, 20, 50];
+  const batchSizes = [5, 10, 20, 50];
 
   return (
     <header

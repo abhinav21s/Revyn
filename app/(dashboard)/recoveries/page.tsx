@@ -4,21 +4,38 @@ import React, { useState, useEffect } from "react";
 import { RecoveryTable } from "@/components/recovery-table";
 import { CaseDetail } from "@/components/case-detail";
 import { Panel } from "@/components/primitives";
-import { MOCK_CASES } from "@/lib/mock-data";
+
 import type { PaymentCase } from "@/lib/types";
 import { RefreshCw } from "lucide-react";
 
+// In-memory cases cache across tab navigation so recoveries table displays instantly with zero flicker
+let cachedCases: PaymentCase[] = [];
+
 export default function RecoveriesPage() {
-  const [cases, setCases] = useState<PaymentCase[]>(MOCK_CASES);
-  const [loading, setLoading] = useState(false);
+  const [cases, setCases] = useState<PaymentCase[]>(() => cachedCases);
+  const [loading, setLoading] = useState<boolean>(() => cachedCases.length === 0);
   const [selectedCase, setSelectedCase] = useState<PaymentCase | null>(null);
 
   useEffect(() => {
     loadCases();
 
     const handleBatch = () => loadCases();
+    const handleFocus = () => loadCases();
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") {
+        loadCases();
+      }
+    };
+
     window.addEventListener("revyn:batch-completed", handleBatch);
-    return () => window.removeEventListener("revyn:batch-completed", handleBatch);
+    window.addEventListener("focus", handleFocus);
+    document.addEventListener("visibilitychange", handleVisibility);
+
+    return () => {
+      window.removeEventListener("revyn:batch-completed", handleBatch);
+      window.removeEventListener("focus", handleFocus);
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
   }, []);
 
   const loadCases = async () => {
@@ -27,11 +44,18 @@ export default function RecoveriesPage() {
       if (res.ok) {
         const data = await res.json();
         if (data.cases && data.cases.length > 0) {
+          cachedCases = data.cases;
           setCases(data.cases);
+          setSelectedCase((prev) => {
+            if (!prev) return null;
+            return data.cases.find((c: PaymentCase) => c.id === prev.id) || prev;
+          });
         }
       }
     } catch (e) {
       console.error("Using deterministic workspace dataset:", e);
+    } finally {
+      setLoading(false);
     }
   };
 

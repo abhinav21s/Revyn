@@ -200,7 +200,9 @@ export function RecoveryTable({
                     {/* Attempts */}
                     {!compact && (
                       <td className="py-4 px-5 font-mono text-[12px] text-[#94A3B8]">
-                        <span className="font-semibold text-[#F8FAFC]">{c.retry_count ?? 0}</span>/3
+                        <span className="font-semibold text-[#F8FAFC]">
+                          {c.retry_count ? c.retry_count : (c.status === "recovered" ? 1 : 0)}
+                        </span>/3
                       </td>
                     )}
 

@@ -39,44 +39,62 @@ export async function POST(request: Request) {
 
     console.log(`[Webhook] Received event: ${eventType}`);
 
-    // ── 1. Event: payment_link.paid (Recovery completed!) ────────────────
-    if (eventType === "payment_link.paid") {
-      const paymentLinkId: string = event.payload?.payment_link?.entity?.id;
+    // ── 1. Event: payment_link.paid or payment.captured (Recovery completed!) ──────
+    if (eventType === "payment_link.paid" || eventType === "payment.captured" || eventType === "order.paid") {
+      const paymentLinkId: string | undefined = event.payload?.payment_link?.entity?.id;
+      const revynCaseId: string | undefined =
+        event.payload?.payment_link?.entity?.notes?.revyn_case_id ||
+        event.payload?.payment?.entity?.notes?.revyn_case_id;
       const paidAmount: number =
         event.payload?.payment?.entity?.amount ||
-        event.payload?.payment_link?.entity?.amount;
+        event.payload?.payment_link?.entity?.amount ||
+        0;
+
+      let caseData: { id: string; retry_count?: number } | null = null;
 
       if (paymentLinkId) {
-        const { data: caseData } = await supabaseAdmin
+        const { data } = await supabaseAdmin
           .from("payment_cases")
-          .select("id")
+          .select("id, retry_count")
           .eq("payment_link_id", paymentLinkId)
           .single();
+        if (data) caseData = data;
+      }
 
-        if (caseData) {
-          await supabaseAdmin
-            .from("payment_cases")
-            .update({
-              status: "recovered",
-              recovered_amount: paidAmount,
-              recovered_at: new Date().toISOString(),
-            })
-            .eq("id", caseData.id);
+      if (!caseData && revynCaseId) {
+        const { data } = await supabaseAdmin
+          .from("payment_cases")
+          .select("id, retry_count")
+          .eq("id", revynCaseId)
+          .single();
+        if (data) caseData = data;
+      }
 
-          await writeAuditLog({
-            case_id: caseData.id,
-            step: "RECOVERED",
-            action: "payment_link_paid",
-            reason: `Payment link paid via Razorpay webhook. Amount: ₹${paidAmount / 100}. Revenue recovered!`,
-            policy_rule: "WEBHOOK_RECOVERY",
-            actor: "razorpay-webhook",
-            metadata: {
-              payment_link_id: paymentLinkId,
-              paid_amount: paidAmount,
-              event_type: eventType,
-            },
-          });
-        }
+      if (caseData) {
+        await supabaseAdmin
+          .from("payment_cases")
+          .update({
+            status: "recovered",
+            recovered_amount: paidAmount,
+            recovered_at: new Date().toISOString(),
+            retry_count: Math.max((caseData.retry_count || 0), 1),
+            ...(paymentLinkId && { payment_link_id: paymentLinkId }),
+          })
+          .eq("id", caseData.id);
+
+        await writeAuditLog({
+          case_id: caseData.id,
+          step: "RECOVERED",
+          action: "payment_link_paid",
+          reason: `Payment verified via Razorpay webhook (${eventType}). Amount: ₹${paidAmount / 100}. Revenue recovered!`,
+          policy_rule: "WEBHOOK_RECOVERY",
+          actor: "razorpay-webhook",
+          metadata: {
+            payment_link_id: paymentLinkId,
+            paid_amount: paidAmount,
+            event_type: eventType,
+          },
+        });
       }
     }
 
@@ -91,8 +109,61 @@ export async function POST(request: Request) {
           paymentEntity.error_description || "Payment failed via gateway";
         const customerEmail = paymentEntity.email || "customer@example.com";
         const customerContact = paymentEntity.contact || "";
+        const revynCaseId = paymentEntity.notes?.revyn_case_id;
 
-        // Ingest into database
+        // Check if this failure belongs to an existing case
+        if (revynCaseId) {
+          const { data: existingCase } = await supabaseAdmin
+            .from("payment_cases")
+            .select("*")
+            .eq("id", revynCaseId)
+            .single();
+
+          if (existingCase) {
+            const newRetryCount = (existingCase.retry_count || 0) + 1;
+            if (newRetryCount >= 3) {
+              await supabaseAdmin
+                .from("payment_cases")
+                .update({
+                  status: "escalated",
+                  retry_count: newRetryCount,
+                  policy_action: "escalate_to_human",
+                  policy_rule: "MAX_RETRY_LIMIT",
+                  policy_reason: `Maximum retry limit of 3 reached (${newRetryCount} failed attempts). Escalated to human review queue.`,
+                })
+                .eq("id", existingCase.id);
+
+              await writeAuditLog({
+                case_id: existingCase.id,
+                step: "DECIDE",
+                action: "escalate_to_human",
+                reason: `Payment attempt #${newRetryCount} failed via webhook (${errorCode}). Max retries reached — escalated to human.`,
+                policy_rule: "MAX_RETRY_LIMIT",
+                actor: "razorpay-webhook",
+                metadata: { retry_count: newRetryCount, error_code: errorCode, error_description: errorDescription },
+              });
+            } else {
+              await supabaseAdmin
+                .from("payment_cases")
+                .update({ retry_count: newRetryCount })
+                .eq("id", existingCase.id);
+
+              await writeAuditLog({
+                case_id: existingCase.id,
+                step: "EXECUTE",
+                action: "payment_attempt_failed",
+                reason: `Payment attempt #${newRetryCount} of 3 failed: ${errorCode} - ${errorDescription}`,
+                policy_rule: "RETRY_COUNTER",
+                actor: "razorpay-webhook",
+                metadata: { retry_count: newRetryCount, error_code: errorCode, error_description: errorDescription },
+              });
+            }
+
+            return NextResponse.json({ received: true });
+          }
+        }
+
+        // Ingest new case into database if no matching existing case
         const { data: newCase } = await supabaseAdmin
           .from("payment_cases")
           .insert({

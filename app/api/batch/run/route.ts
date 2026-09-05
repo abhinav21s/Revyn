@@ -73,9 +73,9 @@ export async function POST(request: Request) {
       errors: 0,
     };
 
-    // ── Process each case ────────────────────────────────────────
-    for (const paymentCase of insertedCases as PaymentCase[]) {
-      try {
+    // ── Process all cases in parallel for maximum speed ─────────────
+    const caseResults = await Promise.allSettled(
+      (insertedCases as PaymentCase[]).map(async (paymentCase) => {
         results.processed++;
 
         // Step 1: Log detection
@@ -221,6 +221,10 @@ export async function POST(request: Request) {
         }
 
         // Step 5: Update case in database
+        const finalRetryCount = policy.action === "smart_retry"
+          ? (paymentCase.retry_count || 0) + 1
+          : (paymentCase.retry_count || 0);
+
         await supabaseAdmin
           .from("payment_cases")
           .update({
@@ -232,23 +236,31 @@ export async function POST(request: Request) {
             policy_reason: policy.reason,
             policy_rule: policy.policy_rule,
             status: newStatus,
-            retry_count: paymentCase.retry_count,
+            retry_count: finalRetryCount,
             ...(paymentLinkUrl && { payment_link_url: paymentLinkUrl }),
             ...(paymentLinkId && { payment_link_id: paymentLinkId }),
           })
           .eq("id", paymentCase.id);
-      } catch (caseError) {
-        results.errors++;
-        console.error(`[Batch] Error processing case ${paymentCase.id}:`, caseError);
+      })
+    );
 
-        await writeAuditLog({
-          case_id: paymentCase.id,
-          step: "ERROR",
-          action: "processing_failed",
-          reason: `Unexpected error: ${caseError instanceof Error ? caseError.message : "Unknown error"}`,
-          actor: "revyn-batch-runner",
-          metadata: { error: String(caseError) },
-        });
+    // Count errors from rejected promises
+    for (const result of caseResults) {
+      if (result.status === "rejected") {
+        results.errors++;
+        console.error("[Batch] Error processing case:", result.reason);
+
+        // Best-effort audit log for failed case
+        try {
+          await writeAuditLog({
+            case_id: "unknown",
+            step: "ERROR",
+            action: "processing_failed",
+            reason: `Unexpected error: ${result.reason instanceof Error ? result.reason.message : String(result.reason)}`,
+            actor: "revyn-batch-runner",
+            metadata: { error: String(result.reason) },
+          });
+        } catch { /* silent */ }
       }
     }
 
